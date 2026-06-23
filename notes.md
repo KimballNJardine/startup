@@ -5,6 +5,12 @@ This file represents what I have learned about web programming.
 - [My startup](https://startup.cs260.click)
 - [My simon](https://simon.cs260.click)
 
+## General Notes:
+
+For **Development essentials/GitHub**, I was asked to add the following:
+
+I love web programming
+
 ## Helpful links
 
 - [Course instruction](https://github.com/webprogramming260)

@@ -1,18 +1,15 @@
-# Your startup name here
+# Ticket-to-Ride Open Source
 
 [My Notes](notes.md)
 
-A brief description of the application here. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+A brief description of the application here. This is a recreation of Ticket-to-Ride, a turn based board game that plays 2 to 4 players.
 
 > [!NOTE]
 > This is a template for your startup application. You must modify this `README.md` file for each phase of your development. You only need to fill in the section for each deliverable when that deliverable is submitted in Canvas. Without completing the section for a deliverable, the TA will not know what to look for when grading your submission. Feel free to add additional information to each deliverable description, but make sure you at least have the list of rubric items and a description of what you did for each item.
 
-> [!NOTE]
-> If you are not familiar with Markdown then you should review the [documentation](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax) before continuing.
-
 ### Elevator pitch
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Sometimes I want to play Ticket-to-Ride with friends, but I can't because I do not have a physical board. Imagine if I could play it online on my phone! Then, you would not have to deal with pieces falling everywhere or counting trains remaining per player, or handle scoring over time (which is a pain). The game could be more competitive because a current vp score would exist for each player, making leaders clearer.
 
 ### Design
 
@@ -23,26 +20,69 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 ```mermaid
 sequenceDiagram
     actor You
-    actor Website
-    You->>Website: Replace this with your design
+    actor Friend
+    participant Website
+    participant Twilio@{ "type": "control" }
+    You->>Website: Register
+    You->>Website: Login
+    You->>Website: Create Game
+    Website->>You: Game Setup
+    You->>Website: Invite Friend
+    Website->>Twilio: Send SMS to Friend
+    Twilio->>Friend: Send SMS to Friend
+    Friend->>Website: Click on link
+    Website->>Friend: Login request
+    Friend->>Website: Login
+    You->>Website: Start Game
+    Website->>You: Setup Game
+    Website->>Friend: Setup Game
+    You->>Website: Play game
+    Friend->>Website: Play game
 ```
 
 ### Key features
 
-- Describe your key feature
-- Describe your key feature
-- Describe your key feature
+- Register, login, logout
+- Be able to setup or join a game
+- Be able to invite friends to join the game
+- Play Ticket-to-Ride with processing done on the backend
+  - MVP All game logic, determining winners, etc. should be correct.
+  - MVP hopefully is the base US map, although that may be cut down
+  - Potential reach goal of randomly generated maps + routes.
+- See global stats for players
+  - Number of games played is MVP
+  - All other stats are extra
 
 ### Technologies
 
 I am going to use the required technologies in the following ways.
 
-- **HTML** - Description here
-- **CSS** - Description here
-- **React** - Description here
-- **Service** - Description here
-- **DB/Login** - Description here
-- **WebSocket** - Description here
+- **HTML** - This will be used to design each page in terms of looks. The one complicated aspect will be designing the look of the board itself, with its asymmetric custom style.
+- **CSS** - This will format the components to have a common style, color format, etc. If I had more time, I would have a style guide which CSS would implement, but CSS will be the style guide in this case.
+- **React** - This will power the front-end, running the components and running api requests to the server. It will transition between screens, and also
+- **Service** - Backend service. Endpoints will follow the latest version of OpenAPI, [OpenAPI v3.2](https://spec.openapis.org/oas/latest.html)
+  - endpoint for creating game
+  - endpoint for joining game
+  - endpoint for inviting friends to game
+  - endpoints for playing moves
+    - selecting train tickets
+    - selecting train cards
+    - playing trains
+  - endpoint for registering account
+    - Accounts may be based on phone number or email address, not sure
+      - This could also be the 3rd party API.
+      - MVP will be a local account, no solution like linking to gmail.
+  - endpoint for logging in.
+  - endpoint to see global stats
+    - most games played by person
+    - win/loss percentages by player
+    - leaderboard
+  - may need endpoint for logging out, not sure.
+  - Inviting users to play a game will involve a text message through Twilio, which is the 3rd party api. The [MockAPI](https://www.twilio.com/docs/openapi/mock-api-generation-with-twilio-openapi-spec) will be used to ensure it works, then the Mock will be adjusted to have text necessary to play the game, then Twilio will actually be used.
+    - Notably, this will likely need to have the invited person create an account or something of the like. I am not sure though.
+    - MVP may be that invited players are given accounts with default passwords? Not sure.
+- **DB/Login** - There will be a username and password for accounts to play. Game state and hidden information will be stored on the backend servers, and Mongo DB will be used to allow for multiple games to be run simaltaneously throughout the globe, where if one server goes down, others can still work (Consistent and Partition Tolerance).
+- **WebSocket** - Live notifications that it is your turn.
 
 ## 🚀 Specification Deliverable
 

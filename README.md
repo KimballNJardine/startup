@@ -110,16 +110,16 @@ For this deliverable I did the following. I checked the box `[x]` and added a de
 
 For this deliverable I did the following. I checked the box `[x]` and added a description for things I completed.
 
-- [ ] I completed the prerequisites for this deliverable (Simon deployed, GitHub link, Git commits)
+- [x] I completed the prerequisites for this deliverable (Simon deployed, GitHub link, Git commits) - the GitHub link is in a footer accross pages. Simon is deployed, there are multiple git commits.
 - [ ] **HTML pages** - I did not complete this part of the deliverable.
-- [ ] **Proper HTML element usage** - I did not complete this part of the deliverable.
-- [ ] **Links** - I did not complete this part of the deliverable.
-- [ ] **Text** - I did not complete this part of the deliverable.
-- [ ] **3rd party API placeholder** - I did not complete this part of the deliverable.
-- [ ] **Images** - I did not complete this part of the deliverable.
-- [ ] **Login placeholder** - I did not complete this part of the deliverable.
+- [x] **Proper HTML element usage** - It looks generally good.
+- [x] **Links** - Links exist between setup, play, and index.
+- [x] **Text** - Textual Content added for pages.
+- [x] **3rd party API placeholder** - Placeholder for inviting friends via Twilio in setup.html
+- [x] **Images** - PNGs of train cards added to play.html. More images will ultimately be needed.
+- [x] **Login placeholder** - found on index.html. I will need to decide if an email or phone number is better ultimately.
 - [ ] **DB data placeholder** - I did not complete this part of the deliverable.
-- [ ] **WebSocket placeholder** - I did not complete this part of the deliverable.
+- [x] **WebSocket placeholder** - Placeholder for notifications on when a player joined in a game in waiting room, or when it is your turn added.
 
 ## 🚀 CSS deliverable
 

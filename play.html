@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ticket to Ride - Play</title>
+    <link rel="icon" href="favicon.ico" />
+  </head>
+  <body>
+    <header>
+      <h1>Ticket to Ride</h1>
+      <nav>
+        <menu>
+          <li><a href="index.html">Login</a></li>
+          <li><a href="play.html">Play</a></li>
+        </menu>
+      </nav>
+      <hr />
+    </header>
+
+    <main>
+      <section>
+        <h2>Pick Train Cards and Tickets</h2>
+        <div>
+          <h3>Train Deck (Face Down)</h3>
+          <button type="button">Draw from Train Deck</button>
+        </div>
+        <div>
+          <h3>Face-Up Train Cards</h3>
+          <table>
+            <tr>
+              <td><button type="button">Face-Up Card 1</button></td>
+              <td><button type="button">Face-Up Card 2</button></td>
+              <td><button type="button">Face-Up Card 3</button></td>
+              <td><button type="button">Face-Up Card 4</button></td>
+              <td><button type="button">Face-Up Card 5</button></td>
+            </tr>
+          </table>
+        </div>
+        <div>
+          <h3>Ticket/Route Deck (Face Down)</h3>
+          <button type="button">Draw Ticket Cards</button>
+        </div>
+      </section>
+
+      <hr />
+
+      <section>
+        <h2>Board (Map Placeholder)</h2>
+        <p>The board is the central and largest area of gameplay. Detailed map rendering will be added later.</p>
+        <pre>
+------------------------------------------------------------
+|                     TICKET TO RIDE MAP                   |
+|                                                          |
+|          [City A]----(Route)----[City B]                |
+|             |                         |                  |
+|           (Route)                  (Route)               |
+|             |                         |                  |
+|          [City C]----(Route)----[City D]                |
+|                                                          |
+|      Placeholder board area for route claims and map     |
+------------------------------------------------------------
+        </pre>
+      </section>
+
+      <hr />
+
+      <section>
+        <h2>Player Public Status</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Turn Indicator</th>
+              <th>Username</th>
+              <th>Trains Left</th>
+              <th>Longest Route Length</th>
+              <th>Train Cards in Hand</th>
+              <th>Tickets/Routes in Hand</th>
+              <th>Public Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Current Turn</td>
+              <td>kimba</td>
+              <td>34</td>
+              <td>18</td>
+              <td>9</td>
+              <td>3</td>
+              <td>52 (segments 42 + longest route bonus +10)</td>
+            </tr>
+            <tr>
+              <td>Waiting</td>
+              <td>alex</td>
+              <td>31</td>
+              <td>15</td>
+              <td>7</td>
+              <td>4</td>
+              <td>39 (segments 39)</td>
+            </tr>
+            <tr>
+              <td>Waiting</td>
+              <td>sam</td>
+              <td>29</td>
+              <td>12</td>
+              <td>11</td>
+              <td>2</td>
+              <td>44 (segments 44)</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr />
+
+      <section>
+        <h2>Your Private Details (Logged-In Player)</h2>
+        <div>
+          <h3>Your Tickets/Routes</h3>
+          <ul>
+            <li>Seattle to New York (completed)</li>
+            <li>Dallas to Miami (incomplete)</li>
+            <li>Denver to El Paso (completed)</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Your Train Cards</h3>
+          <ul>
+            <li>Red x2</li>
+            <li>Blue x3</li>
+            <li>Green x1</li>
+            <li>Yellow x2</li>
+            <li>Locomotive x1</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Your Actual Score Breakdown</h3>
+          <p>Total Score: 60</p>
+          <ul>
+            <li>Route segments: +42</li>
+            <li>Completed tickets/routes: +26</li>
+            <li>Incomplete tickets/routes: -8</li>
+          </ul>
+        </div>
+      </section>
+
+      <hr />
+
+      <section>
+        <h2>Actions (Placeholder)</h2>
+        <button type="button">Draw Train Cards</button>
+        <button type="button">Draw Tickets/Routes</button>
+        <button type="button">Claim Route</button>
+        <button type="button">Pass/End Turn</button>
+      </section>
+    </main>
+
+    <footer>
+      <hr />
+      <a href="https://github.com/KimballNJardine/startup">GitHub Repository</a>
+    </footer>
+  </body>
+</html>

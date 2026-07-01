@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ticket to Ride - Setup</title>
+    <link rel="icon" href="favicon.ico" />
+  </head>
+  <body>
+    <header>
+      <h1>Ticket to Ride</h1>
+      <nav>
+        <menu>
+          <li><a href="index.html">Login</a></li>
+          <li><a href="setup.html">Setup</a></li>
+          <li><a href="play.html">Play</a></li>
+        </menu>
+      </nav>
+      <hr />
+    </header>
+
+    <main>
+      <section>
+        <h2>Game Setup Waiting Room</h2>
+        <p>Configure your game, invite friends, and wait for players to join before starting.</p>
+      </section>
+
+      <hr />
+
+      <section>
+        <h2>Game Configuration</h2>
+        <div>
+          <label for="playerCount">Number of Players</label>
+          <select id="playerCount" name="playerCount">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5" selected>5</option>
+          </select>
+        </div>
+        <p>Choose between 2 and 5 players. The game can start after all invited players are logged in.</p>
+      </section>
+
+      <hr />
+
+      <section>
+        <h2>Invite Friends (Placeholder)</h2>
+        <p>
+          This section is a placeholder for future Twilio integration to send game invites by text message
+          (or another invite method).
+        </p>
+        <form method="post" action="#" id="inviteForm">
+          <div>
+            <label for="inviteContact">Friend Contact</label>
+            <input
+              id="inviteContact"
+              name="inviteContact"
+              type="text"
+              placeholder="Phone number or email"
+            />
+          </div>
+          <button type="button" aria-label="Invite friend">Send Invite</button>
+        </form>
+      </section>
+
+      <hr />
+
+      <section>
+        <h2>Players Joined</h2>
+        <p>Waiting for players to log in and join this game session.</p>
+        <table id="playerList">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Host</td>
+              <td>Logged In</td>
+            </tr>
+            <tr>
+              <td>Player 2</td>
+              <td>Waiting to Join</td>
+            </tr>
+            <tr>
+              <td>Player 3</td>
+              <td>Waiting to Join</td>
+            </tr>
+            <tr>
+              <td>Player 4</td>
+              <td>Waiting to Join</td>
+            </tr>
+            <tr>
+              <td>Player 5</td>
+              <td>Waiting to Join</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <hr />
+
+      <section>
+        <h2>Notifications</h2>
+        <div id="notifications">Waiting for join notifications...</div>
+      </section>
+
+      <hr />
+
+      <section>
+        <h2>Start Game</h2>
+        <p>The Start Game action will eventually validate players and initialize the game state.</p>
+        <form method="get" action="play.html">
+          <button id="startGameBtn" type="submit" aria-label="Start game">Start Game</button>
+        </form>
+      </section>
+    </main>
+
+    <footer>
+      <hr />
+      <a href="https://github.com/KimballNJardine/startup">GitHub Repository</a>
+    </footer>
+  </body>
+</html>

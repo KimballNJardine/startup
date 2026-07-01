@@ -111,14 +111,14 @@ For this deliverable I did the following. I checked the box `[x]` and added a de
 For this deliverable I did the following. I checked the box `[x]` and added a description for things I completed.
 
 - [x] I completed the prerequisites for this deliverable (Simon deployed, GitHub link, Git commits) - the GitHub link is in a footer accross pages. Simon is deployed, there are multiple git commits.
-- [ ] **HTML pages** - I did not complete this part of the deliverable.
+- [x] **HTML pages** - All general pages added. May need more in the future, but basic start created.
 - [x] **Proper HTML element usage** - It looks generally good.
-- [x] **Links** - Links exist between setup, play, and index.
+- [x] **Links** - Links exist between setup, play, leaderboard, and index.
 - [x] **Text** - Textual Content added for pages.
 - [x] **3rd party API placeholder** - Placeholder for inviting friends via Twilio in setup.html
 - [x] **Images** - PNGs of train cards added to play.html. More images will ultimately be needed.
 - [x] **Login placeholder** - found on index.html. I will need to decide if an email or phone number is better ultimately.
-- [ ] **DB data placeholder** - I did not complete this part of the deliverable.
+- [x] **DB data placeholder** - Basic database calls for leaderboard info added.
 - [x] **WebSocket placeholder** - Placeholder for notifications on when a player joined in a game in waiting room, or when it is your turn added.
 
 ## 🚀 CSS deliverable

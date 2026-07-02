@@ -34,3 +34,5 @@ Interesting things I have learned about HTML
 ## React
 
 Interesting things I have learned about React
+
+- Added a class-based TypeScript domain scaffold in src/domain for future map pin rendering in React. It stores percentage coordinates, angle, route slot ordering, and train requirement rules.

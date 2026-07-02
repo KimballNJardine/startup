@@ -142,6 +142,19 @@ For this deliverable I did the following. I checked the box `[x]` and added a de
 - [ ] **Components** - I did not complete this part of the deliverable.
 - [ ] **Router** - I did not complete this part of the deliverable.
 
+### React + TypeScript map pin model scaffold
+
+A starter TypeScript domain model has been added for map route pins and train requirements. This is architecture only (not game logic), so a future React migration can render pins from typed snapshots.
+
+- `src/domain/train-types.ts` - train color and card type definitions.
+- `src/domain/train-requirement.ts` - fixed-color and any-color route requirement model.
+- `src/domain/map-pin.ts` - pin object with percentage location, angle, slot-chain links, and neighbor links.
+- `src/domain/route-link.ts` - route link model with ordered pin slots (2 to 3+ supported).
+- `src/domain/board-pin-registry.ts` - container for route links and pins plus relationship wiring.
+- `src/domain/index.ts` - barrel exports for easier future imports.
+
+This model aligns with the current board overlay approach in play.html: x/y percentages and angle degrees for map placement.
+
 ## 🚀 React part 2: Reactivity deliverable
 
 For this deliverable I did the following. I checked the box `[x]` and added a description for things I completed.

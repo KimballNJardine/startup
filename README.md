@@ -2,10 +2,10 @@
 
 [My Notes](notes.md)
 
-This is a recreation of Ticket-to-Ride, a turn based board game that plays 2 to 4 players.
+This is a recreation of Ticket-to-Ride, a turn based board game that plays 2 to 5 players.
 
 > [!NOTE]
-> This is a template for your startup application. You must modify this `README.md` file for each phase of your development. You only need to fill in the section for each deliverable when that deliverable is submitted in Canvas. Without completing the section for a deliverable, the TA will not know what to look for when grading your submission. Feel free to add additional information to each deliverable description, but make sure you at least have the list of rubric items and a description of what you did for each item.
+> This is an educational GitHub project for learning Web Development, and is not affiliated in any way with [Ticket To Ride, as published by Days of Wonder](https://www.daysofwonder.com/universe/ticket-to-ride/). It is NOT for commercial use, and is MIT licensed, as far as what I can license. Images like the GitHub logos or the train map itself may be the intellectual property of other organizations, and are not my right to give. I believe using some material falls under fair use.
 
 ### Elevator pitch
 

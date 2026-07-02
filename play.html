@@ -131,24 +131,104 @@
       </section>
 
       <section class="rounded-2xl border border-rail-300/70 bg-white/80 p-5 shadow-card sm:p-6">
-        <h2 class="text-xl font-extrabold tracking-tight sm:text-2xl">Board (Map Placeholder)</h2>
+        <h2 class="text-xl font-extrabold tracking-tight sm:text-2xl">Board</h2>
         <p class="mt-2 text-sm leading-relaxed text-rail-700 sm:text-base">
-          The board is the central gameplay area. This page remains intentionally minimal now, while keeping a
-          clear path to a future landscape-focused play layout.
+          Placeholder train pins are intentionally random for now. The layout is prepared for future default map pin
+          coordinates and per-route angles.
         </p>
-        <pre class="mt-4 overflow-x-auto rounded-xl bg-rail-paper/70 p-4 text-xs text-rail-900 sm:text-sm">
-------------------------------------------------------------
-|                     TICKET TO RIDE MAP                   |
-|                                                          |
-|          [City A]----(Route)----[City B]                |
-|             |                         |                  |
-|           (Route)                  (Route)               |
-|             |                         |                  |
-|          [City C]----(Route)----[City D]                |
-|                                                          |
-|      Placeholder board area for route claims and map     |
-------------------------------------------------------------
-        </pre>
+        <div
+          class="relative mt-4 overflow-hidden rounded-xl border border-rail-300/70 bg-rail-paper/70"
+          style="aspect-ratio: 1024 / 768;"
+        >
+          <img
+            src="img/USA_map.jpg"
+            alt="Ticket to Ride USA board with cities and rail routes"
+            class="h-full w-full object-contain"
+          />
+
+          <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+            <div
+              class="absolute h-3 w-8 rounded-sm bg-black/90 shadow-sm ring-1 ring-white/70"
+              data-pin-id="pin-01"
+              data-x="14"
+              data-y="29"
+              data-angle="-20"
+              style="left: 14%; top: 29%; transform: translate(-50%, -50%) rotate(-20deg);"
+            ></div>
+            <div
+              class="absolute h-3 w-8 rounded-sm bg-green-700/90 shadow-sm ring-1 ring-white/70"
+              data-pin-id="pin-02"
+              data-x="22"
+              data-y="58"
+              data-angle="35"
+              style="left: 22%; top: 58%; transform: translate(-50%, -50%) rotate(35deg);"
+            ></div>
+            <div
+              class="absolute h-3 w-8 rounded-sm bg-blue-700/90 shadow-sm ring-1 ring-white/70"
+              data-pin-id="pin-03"
+              data-x="33"
+              data-y="39"
+              data-angle="8"
+              style="left: 33%; top: 39%; transform: translate(-50%, -50%) rotate(8deg);"
+            ></div>
+            <div
+              class="absolute h-3 w-8 rounded-sm bg-red-700/90 shadow-sm ring-1 ring-white/70"
+              data-pin-id="pin-04"
+              data-x="45"
+              data-y="63"
+              data-angle="-12"
+              style="left: 45%; top: 63%; transform: translate(-50%, -50%) rotate(-12deg);"
+            ></div>
+            <div
+              class="absolute h-3 w-8 rounded-sm bg-black/90 shadow-sm ring-1 ring-white/70"
+              data-pin-id="pin-05"
+              data-x="54"
+              data-y="45"
+              data-angle="21"
+              style="left: 54%; top: 45%; transform: translate(-50%, -50%) rotate(21deg);"
+            ></div>
+            <div
+              class="absolute h-3 w-8 rounded-sm bg-green-700/90 shadow-sm ring-1 ring-white/70"
+              data-pin-id="pin-06"
+              data-x="62"
+              data-y="33"
+              data-angle="-30"
+              style="left: 62%; top: 33%; transform: translate(-50%, -50%) rotate(-30deg);"
+            ></div>
+            <div
+              class="absolute h-3 w-8 rounded-sm bg-yellow-500/95 shadow-sm ring-1 ring-white/70"
+              data-pin-id="pin-07"
+              data-x="67"
+              data-y="69"
+              data-angle="15"
+              style="left: 67%; top: 69%; transform: translate(-50%, -50%) rotate(15deg);"
+            ></div>
+            <div
+              class="absolute h-3 w-8 rounded-sm bg-slate-700/90 shadow-sm ring-1 ring-white/70"
+              data-pin-id="pin-08"
+              data-x="77"
+              data-y="51"
+              data-angle="-8"
+              style="left: 77%; top: 51%; transform: translate(-50%, -50%) rotate(-8deg);"
+            ></div>
+            <div
+              class="absolute h-3 w-8 rounded-sm bg-red-700/90 shadow-sm ring-1 ring-white/70"
+              data-pin-id="pin-09"
+              data-x="84"
+              data-y="35"
+              data-angle="27"
+              style="left: 84%; top: 35%; transform: translate(-50%, -50%) rotate(27deg);"
+            ></div>
+            <div
+              class="absolute h-3 w-8 rounded-sm bg-blue-700/90 shadow-sm ring-1 ring-white/70"
+              data-pin-id="pin-10"
+              data-x="89"
+              data-y="79"
+              data-angle="-24"
+              style="left: 89%; top: 79%; transform: translate(-50%, -50%) rotate(-24deg);"
+            ></div>
+          </div>
+        </div>
       </section>
 
       <section class="rounded-2xl border border-rail-300/70 bg-white/80 p-5 shadow-card sm:p-6">

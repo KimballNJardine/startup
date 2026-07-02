@@ -5,7 +5,7 @@
 This is a recreation of Ticket-to-Ride, a turn based board game that plays 2 to 5 players.
 
 > [!NOTE]
-> This is an educational GitHub project for learning Web Development, and is not affiliated in any way with [Ticket To Ride, as published by Days of Wonder](https://www.daysofwonder.com/universe/ticket-to-ride/). It is NOT for commercial use, and is MIT licensed, as far as what I can license. Images like the GitHub logos or the train map itself may be the intellectual property of other organizations, and are not my right to give. I believe using some material falls under fair use.
+> This is an educational GitHub project for learning Web Development, and is not affiliated in any way with [Ticket To Ride, as published by Days of Wonder](https://www.daysofwonder.com/universe/ticket-to-ride/). It is NOT for commercial use, and is MIT licensed, as far as what I can license. Images like the GitHub logos or the train map itself may be the intellectual property of other organizations, and are not my right to give. I believe that use of materials like the map falls under fair use given the purpose of this project.
 
 ### Elevator pitch
 

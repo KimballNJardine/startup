@@ -1,63 +1,92 @@
 import React from "react";
 import "./app.css";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import LeaderboardPage from "./pages/leaderboard-page";
+import LoginPage from "./pages/login-page";
+import PlayPage from "./pages/play-page";
+import SetupPage from "./pages/setup-page";
+import NotFoundPage from "./pages/notfound-page";
 
 export default function App() {
   return (
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ticket to Ride - Login</title>
-    <link rel="icon" href="favicon.ico" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Nunito Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-            },
-            colors: {
-              rail: {
-                paper: '#f8f2e7',
-                100: '#efe2c6',
-                200: '#e0cda8',
-                300: '#c7aa79',
-                600: '#8f6b3f',
-                700: '#73542f',
-                900: '#2f2112',
-              },
-            },
-            boxShadow: {
-              card: '0 14px 40px -22px rgba(47, 33, 18, 0.35)',
-            },
-          },
-        },
-      };
-    </script>
-  </head>
-  <main>
-    App components go here
-  </main>
-      <footer class="border-t border-rail-300/70 bg-rail-paper/90">
-      <div class="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-        <a
-          href="https://github.com/KimballNJardine/startup"
-          class="inline-flex items-center gap-2 text-sm font-semibold text-rail-700 underline decoration-rail-300 underline-offset-4 transition hover:text-rail-900"
-          >GitHub Repository
-          <img
-            src="img/GitHub%20Logos/SVG/GitHub_Invertocat_Black.svg"
-            alt=""
-            aria-hidden="true"
-            class="h-4 w-4"
-          /></a>
-        <p class="text-right text-sm font-semibold text-rail-700">Made by Kimball Jardine</p>
-      </div>
-    </footer>
+    <BrowserRouter>
+      <header className="border-b border-rail-300/70 bg-rail-paper/95 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-4 sm:px-6">
+          <h1 className="text-xl font-extrabold tracking-wide sm:text-2xl">
+            Ticket to Ride React
+          </h1>
+          <nav aria-label="Primary navigation">
+            <menu className="m-0 flex list-none gap-2 overflow-x-auto p-0">
+              <li>
+                <a
+                  href="index.html"
+                  aria-current="page"
+                  className="block whitespace-nowrap rounded-full bg-rail-700 px-3 py-1.5 text-sm font-semibold text-rail-paper"
+                >
+                  Login
+                </a>
+              </li>
+              <li>
+                <a
+                  href="setup.html"
+                  className="block whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold text-rail-700 transition hover:bg-rail-200 hover:text-rail-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-700"
+                >
+                  Setup
+                </a>
+              </li>
+              <li>
+                <a
+                  href="play.html"
+                  className="block whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold text-rail-700 transition hover:bg-rail-200 hover:text-rail-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-700"
+                >
+                  Play
+                </a>
+              </li>
+              <li>
+                <a
+                  href="leaderboard.html"
+                  className="block whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold text-rail-700 transition hover:bg-rail-200 hover:text-rail-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-700"
+                >
+                  Leaderboard
+                </a>
+              </li>
+            </menu>
+          </nav>
+        </div>
+      </header>
+      <Routes>
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/index" element={<LoginPage />} />
+        <Route path="/index.html" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login.html" element={<LoginPage />} />
+        <Route path="/setup" element={<SetupPage />} />
+        <Route path="/setup.html" element={<SetupPage />} />
+        <Route path="/play" element={<PlayPage />} />
+        <Route path="/play.html" element={<PlayPage />} />
+        <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/leaderboard.html" element={<LeaderboardPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+      <footer className="border-t border-rail-300/70 bg-rail-paper/90">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <a
+            href="https://github.com/KimballNJardine/startup"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-rail-700 underline decoration-rail-300 underline-offset-4 transition hover:text-rail-900"
+          >
+            GitHub Repository
+            <img
+              src="/img/GitHub%20Logos/SVG/GitHub_Invertocat_Black.svg"
+              alt=""
+              aria-hidden="true"
+              className="h-4 w-4"
+            />
+          </a>
+          <p className="text-right text-sm font-semibold text-rail-700">
+            Made by Kimball Jardine
+          </p>
+        </div>
+      </footer>
+    </BrowserRouter>
   );
 }

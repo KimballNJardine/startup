@@ -6,7 +6,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
 
-    <title>Ticket to Ride React</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Nunito Sans", "ui-sans-serif", "system-ui", "sans-serif"],
+            },
+            colors: {
+              rail: {
+                paper: "#f8f2e7",
+                100: "#efe2c6",
+                200: "#e0cda8",
+                300: "#c7aa79",
+                600: "#8f6b3f",
+                700: "#73542f",
+                900: "#2f2112",
+              },
+            },
+            boxShadow: {
+              card: "0 14px 40px -22px rgba(47, 33, 18, 0.35)",
+            },
+          },
+        },
+      };
+    </script>
+
+    <title>Ticket to Ride - Login</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

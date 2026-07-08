@@ -1,3 +1,4 @@
 *.pem
 /src/tmp/*
 node_modules/**
+dist/**

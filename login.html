@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ticket to Ride - Login</title>
+    <link rel="icon" href="favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Nunito Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            },
+            colors: {
+              rail: {
+                paper: '#f8f2e7',
+                100: '#efe2c6',
+                200: '#e0cda8',
+                300: '#c7aa79',
+                600: '#8f6b3f',
+                700: '#73542f',
+                900: '#2f2112',
+              },
+            },
+            boxShadow: {
+              card: '0 14px 40px -22px rgba(47, 33, 18, 0.35)',
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="min-h-screen bg-gradient-to-b from-rail-paper via-rail-paper to-rail-100 font-sans text-rail-900 flex flex-col">
+    <header class="border-b border-rail-300/70 bg-rail-paper/95 backdrop-blur">
+      <div class="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-4 sm:px-6">
+        <h1 class="text-xl font-extrabold tracking-wide sm:text-2xl">Ticket to Ride</h1>
+        <nav aria-label="Primary navigation">
+          <menu class="m-0 flex list-none gap-2 overflow-x-auto p-0">
+            <li>
+              <a
+                href="index.html"
+                aria-current="page"
+                class="block whitespace-nowrap rounded-full bg-rail-700 px-3 py-1.5 text-sm font-semibold text-rail-paper"
+                >Login</a
+              >
+            </li>
+            <li>
+              <a
+                href="setup.html"
+                class="block whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold text-rail-700 transition hover:bg-rail-200 hover:text-rail-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-700"
+                >Setup</a
+              >
+            </li>
+            <li>
+              <a
+                href="play.html"
+                class="block whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold text-rail-700 transition hover:bg-rail-200 hover:text-rail-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-700"
+                >Play</a
+              >
+            </li>
+            <li>
+              <a
+                href="leaderboard.html"
+                class="block whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold text-rail-700 transition hover:bg-rail-200 hover:text-rail-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-700"
+                >Leaderboard</a
+              >
+            </li>
+          </menu>
+        </nav>
+      </div>
+    </header>
+
+    <main class="mx-auto w-full max-w-md flex-1 px-4 py-8 sm:px-6 sm:py-10">
+      <section class="rounded-2xl border border-rail-300/70 bg-white/80 p-6 shadow-card sm:p-8">
+        <h2 class="text-2xl font-extrabold tracking-tight">Log In</h2>
+        <p class="mt-2 text-sm text-rail-700">
+          Jump back into your game room quickly. This layout is portrait-first for phone play.
+        </p>
+
+        <form method="post" action="#" class="mt-6 space-y-5">
+          <div class="space-y-1.5">
+            <label for="email" class="text-sm font-bold uppercase tracking-wide text-rail-700">Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="your@email.com"
+              required
+              class="w-full rounded-xl border border-rail-300 bg-rail-paper/60 px-4 py-3 text-base text-rail-900 placeholder:text-rail-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-700"
+            />
+          </div>
+          <div class="space-y-1.5">
+            <label for="password" class="text-sm font-bold uppercase tracking-wide text-rail-700"
+              >Password</label
+            >
+            <input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="password"
+              required
+              class="w-full rounded-xl border border-rail-300 bg-rail-paper/60 px-4 py-3 text-base text-rail-900 placeholder:text-rail-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-700"
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full rounded-xl bg-rail-700 px-4 py-3 text-base font-extrabold text-rail-paper transition hover:bg-rail-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-700"
+          >
+            Login
+          </button>
+        </form>
+      </section>
+    </main>
+
+    <footer class="border-t border-rail-300/70 bg-rail-paper/90">
+      <div class="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+        <a
+          href="https://github.com/KimballNJardine/startup"
+          class="inline-flex items-center gap-2 text-sm font-semibold text-rail-700 underline decoration-rail-300 underline-offset-4 transition hover:text-rail-900"
+          >GitHub Repository
+          <img
+            src="img/GitHub%20Logos/SVG/GitHub_Invertocat_Black.svg"
+            alt=""
+            aria-hidden="true"
+            class="h-4 w-4"
+          /></a
+        >
+        <p class="text-right text-sm font-semibold text-rail-700">Made by Kimball Jardine</p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -137,10 +137,10 @@ For this deliverable I did the following. I checked the box `[x]` and added a de
 
 For this deliverable I did the following. I checked the box `[x]` and added a description for things I completed.
 
-- [ ] I completed the prerequisites for this deliverable (Simon deployed, GitHub link, Git commits)
-- [ ] **Bundled using Vite** - I did not complete this part of the deliverable.
-- [ ] **Components** - I did not complete this part of the deliverable.
-- [ ] **Router** - I did not complete this part of the deliverable.
+- [x] I completed the prerequisites for this deliverable (Simon deployed, GitHub link, Git commits)
+- [x] **Bundled using Vite** - Was bundled and deployed to startup.kimball.click.
+- [x] **Components** - Pages were turned into components. Note that tailwind css was used (hence some differences), as well as typescript components (not javascript)
+- [x] **Router** - Routing works as expected.
 
 ### React + TypeScript map pin model scaffold
 

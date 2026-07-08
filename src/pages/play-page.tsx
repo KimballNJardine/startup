@@ -1,5 +1,37 @@
 import React from "react";
 
+const boardStyle = {
+  aspectRatio: "1024 / 683",
+};
+
+const overlayStyle = {
+  "--pin-width": "3.125%",
+  "--pin-height": "1.5625%",
+} as React.CSSProperties;
+
+const boardPins = [
+  ["bg-slate-700/90", "9.93%", "27.4%", "-68.72deg"],
+  ["bg-blue-700/90", "26.16%", "11.47%", "-23.32deg"],
+  ["bg-blue-700/90", "29.52%", "10.01%", "-13.85deg"],
+  ["bg-green-700/90", "41.1%", "51.79%", "-35.66deg"],
+  ["bg-green-700/90", "44.07%", "49.17%", "-24.85deg"],
+  ["bg-pink-500/90", "71.09%", "39.53%", "-14.04deg"],
+  ["bg-pink-500/90", "74.56%", "38.51%", "-8.75deg"],
+  ["bg-pink-500/90", "78.08%", "38.21%", "3.53deg"],
+  ["bg-yellow-500/95", "79.55%", "60.12%", "-42.48deg"],
+  ["bg-yellow-500/95", "82.17%", "56.72%", "-41.31deg"],
+  ["bg-orange-500/90", "57.96%", "79.78%", "-133.38deg"],
+  ["bg-red-700/90", "62.22%", "83.06%", "-9.77deg"],
+  ["bg-red-700/90", "65.69%", "82.24%", "-9.46deg"],
+  ["bg-black/90", "87.89%", "86.6%", "48.56deg"],
+  ["bg-black/90", "85.29%", "82.86%", "39.28deg"],
+  ["bg-black/90", "72.18%", "81.05%", "-30.96deg"],
+  ["bg-white/95 ring-black/30", "24.05%", "74.05%", "13.91deg"],
+  ["bg-white/95 ring-black/30", "20.54%", "73.34%", "0.26deg"],
+  ["bg-slate-800/90", "71.51%", "60.98%", "-45.1deg"],
+  ["bg-slate-800/90", "78.51%", "53.51%", "-10.36deg"],
+] as const;
+
 export default function PlayPage() {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
@@ -91,7 +123,7 @@ export default function PlayPage() {
         </p>
         <div
           className="relative mt-4 overflow-hidden rounded-xl border border-rail-300/70 bg-rail-paper/70"
-          style="aspect-ratio: 1024 / 683;"
+          style={boardStyle}
         >
           <img
             src="img/USA_map.jpg"
@@ -102,88 +134,21 @@ export default function PlayPage() {
           <div
             className="pointer-events-none absolute inset-0"
             aria-hidden="true"
-            style="--pin-width: 3.125%; --pin-height: 1.5625%;"
+            style={overlayStyle}
           >
-            <div
-              className="absolute rounded-sm bg-slate-700/90 shadow-sm ring-1 ring-white/70"
-              style="left: 9.93%; top: 27.4%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(-68.72deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-blue-700/90 shadow-sm ring-1 ring-white/70"
-              style="left: 26.16%; top: 11.47%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(-23.32deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-blue-700/90 shadow-sm ring-1 ring-white/70"
-              style="left: 29.52%; top: 10.01%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(-13.85deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-green-700/90 shadow-sm ring-1 ring-white/70"
-              style="left: 41.1%; top: 51.79%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(-35.66deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-green-700/90 shadow-sm ring-1 ring-white/70"
-              style="left: 44.07%; top: 49.17%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(-24.85deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-pink-500/90 shadow-sm ring-1 ring-white/70"
-              style="left: 71.09%; top: 39.53%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(-14.04deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-pink-500/90 shadow-sm ring-1 ring-white/70"
-              style="left: 74.56%; top: 38.51%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(-8.75deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-pink-500/90 shadow-sm ring-1 ring-white/70"
-              style="left: 78.08%; top: 38.21%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(3.53deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-yellow-500/95 shadow-sm ring-1 ring-white/70"
-              style="left: 79.55%; top: 60.12%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(-42.48deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-yellow-500/95 shadow-sm ring-1 ring-white/70"
-              style="left: 82.17%; top: 56.72%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(-41.31deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-orange-500/90 shadow-sm ring-1 ring-white/70"
-              style="left: 57.96%; top: 79.78%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(-133.38deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-red-700/90 shadow-sm ring-1 ring-white/70"
-              style="left: 62.22%; top: 83.06%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(-9.77deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-red-700/90 shadow-sm ring-1 ring-white/70"
-              style="left: 65.69%; top: 82.24%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(-9.46deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-black/90 shadow-sm ring-1 ring-white/70"
-              style="left: 87.89%; top: 86.6%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(48.56deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-black/90 shadow-sm ring-1 ring-white/70"
-              style="left: 85.29%; top: 82.86%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(39.28deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-black/90 shadow-sm ring-1 ring-white/70"
-              style="left: 72.18%; top: 81.05%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(-30.96deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-white/95 shadow-sm ring-1 ring-black/30"
-              style="left: 24.05%; top: 74.05%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(13.91deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-white/95 shadow-sm ring-1 ring-black/30"
-              style="left: 20.54%; top: 73.34%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(0.26deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-slate-800/90 shadow-sm ring-1 ring-white/70"
-              style="left: 71.51%; top: 60.98%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(-45.1deg);"
-            ></div>
-            <div
-              className="absolute rounded-sm bg-slate-800/90 shadow-sm ring-1 ring-white/70"
-              style="left: 78.51%; top: 53.51%; width: var(--pin-width); height: var(--pin-height); transform: translate(-50%, -50%) rotate(-10.36deg);"
-            ></div>
+            {boardPins.map(([colorClass, left, top, rotate], index) => (
+              <div
+                key={`${left}-${top}-${index}`}
+                className={`absolute rounded-sm shadow-sm ring-1 ring-white/70 ${colorClass}`}
+                style={{
+                  left,
+                  top,
+                  width: "var(--pin-width)",
+                  height: "var(--pin-height)",
+                  transform: `translate(-50%, -50%) rotate(${rotate})`,
+                }}
+              ></div>
+            ))}
           </div>
         </div>
       </section>

@@ -1,4 +1,9 @@
-import { getParallelGroupKey, getRouteCardTypeRequirement, type BoardRouteState } from './board-data';
+import {
+  getParallelGroupKey,
+  getRouteCardTypeRequirement,
+  type BoardRouteState,
+  type RouteCardRequirement,
+} from './board-data';
 import { getCardTypeCount } from './game-init';
 import type { ClaimCardSpend, ClaimLegalityResult, LocalGameState, PlayerId } from './game-types';
 import type { TrainCardType, TrainColor } from './train-types';
@@ -122,7 +127,7 @@ export function getDefaultClaimSpend(state: LocalGameState, routeId: string, pla
   const requiredCount = route.slotCount;
   const cardCounts = getCardTypeCount(player.handCardIds, state.trainCardsById);
   const locomotiveCount = cardCounts.locomotive;
-  const requirement = getRouteCardTypeRequirement(route);
+  const requirement: RouteCardRequirement = getRouteCardTypeRequirement(route);
 
   if (requirement !== 'any-color') {
     const colorCount = computeMaxColorCards(cardCounts, requirement);

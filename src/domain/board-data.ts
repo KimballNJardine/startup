@@ -51,7 +51,7 @@ export interface BoardState {
   routeIds: string[];
 }
 
-function assertRawBoardPinRecord(value: unknown, index: number): asserts value is RawBoardPinRecord {
+function parseRawBoardPinRecord(value: unknown, index: number): RawBoardPinRecord {
   if (!value || typeof value !== 'object') {
     throw new Error(`Pin row ${index} must be an object.`);
   }
@@ -66,8 +66,24 @@ function assertRawBoardPinRecord(value: unknown, index: number): asserts value i
     throw new Error(`Pin ${row.id} has an invalid routeLinkId.`);
   }
 
-  if (!Number.isInteger(row.slotIndex) || row.slotIndex < 0) {
+  const slotIndex = row.slotIndex;
+  if (typeof slotIndex !== 'number' || !Number.isInteger(slotIndex) || slotIndex < 0) {
     throw new Error(`Pin ${row.id} has an invalid slotIndex.`);
+  }
+
+  const xPercent = row.xPercent;
+  if (typeof xPercent !== 'number' || !Number.isFinite(xPercent)) {
+    throw new Error(`Pin ${row.id} has invalid xPercent.`);
+  }
+
+  const yPercent = row.yPercent;
+  if (typeof yPercent !== 'number' || !Number.isFinite(yPercent)) {
+    throw new Error(`Pin ${row.id} has invalid yPercent.`);
+  }
+
+  const angleDeg = row.angleDeg;
+  if (typeof angleDeg !== 'number' || !Number.isFinite(angleDeg)) {
+    throw new Error(`Pin ${row.id} has invalid angleDeg.`);
   }
 
   if (typeof row.trainRequirementMode !== 'string') {
@@ -89,16 +105,23 @@ function assertRawBoardPinRecord(value: unknown, index: number): asserts value i
   if (typeof row.sourceTraincarId !== 'string' || row.sourceTraincarId.length === 0) {
     throw new Error(`Pin ${row.id} has invalid sourceTraincarId.`);
   }
+
+  return {
+    id: row.id,
+    routeLinkId: row.routeLinkId,
+    slotIndex,
+    xPercent,
+    yPercent,
+    angleDeg,
+    trainRequirementMode: row.trainRequirementMode,
+    fixedColor: row.fixedColor ?? null,
+    sourceTraincarId: row.sourceTraincarId,
+  };
 }
 
 export function getUsaBoardPinRecords(): RawBoardPinRecord[] {
   const rows = usaBoardPinsJson as unknown[];
-
-  rows.forEach((row, index) => {
-    assertRawBoardPinRecord(row, index);
-  });
-
-  return rows;
+  return rows.map((row, index) => parseRawBoardPinRecord(row, index));
 }
 
 export function getParallelGroupKey(routeLinkId: string): string {

@@ -2,3 +2,4 @@
 /src/tmp/*
 node_modules/**
 dist/**
+src/domain/data/**

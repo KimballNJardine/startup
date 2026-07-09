@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   TRAIN_COLORS,
   canClaimRoute,
@@ -13,6 +13,7 @@ import {
   getDefaultClaimSpend,
   type ClaimCardSpend,
   type LocalGameState,
+  type TrainCardType,
   type TrainColor,
 } from "../domain";
 
@@ -44,6 +45,39 @@ const TRAIN_CARD_IMAGE_BY_TYPE = {
 
 const TRAIN_CARD_BACK_IMAGE = "img/split_trains/train_back.png";
 
+const RAINBOW_RING_GRADIENT =
+  "linear-gradient(135deg, rgba(244,63,94,0.95), rgba(250,204,21,0.95), rgba(52,211,153,0.95), rgba(96,165,250,0.95))";
+
+const FELT_TEXTURE_IMAGE =
+  "repeating-radial-gradient(circle at 18% 22%, rgba(74,222,128,0.045) 0 1px, rgba(74,222,128,0) 1px 4px), repeating-radial-gradient(circle at 78% 68%, rgba(16,185,129,0.04) 0 1px, rgba(16,185,129,0) 1px 3px), radial-gradient(circle at 28% 18%, rgba(20,83,45,0.72), rgba(6,78,59,0.95) 58%, rgba(2,44,34,0.99))";
+
+const feltSectionStyle: React.CSSProperties = {
+  backgroundImage: FELT_TEXTURE_IMAGE,
+  boxShadow: "inset 0 -18px 36px rgba(0,0,0,0.5), 0 16px 28px rgba(0,0,0,0.24)",
+};
+
+const feltBoardWellStyle: React.CSSProperties = {
+  backgroundImage: FELT_TEXTURE_IMAGE,
+  boxShadow:
+    "inset 0 0 0 1px rgba(6,78,59,0.6), inset 0 -14px 24px rgba(0,0,0,0.42)",
+};
+
+const DISCARD_ANIMATION_STAGGER_MS = 85;
+const DISCARD_ANIMATION_DURATION_MS = 560;
+const DISCARD_ANIMATION_CLEAR_BUFFER_MS = 180;
+
+interface DiscardAnimationCard {
+  id: string;
+  cardType: TrainCardType;
+  delayMs: number;
+  startXPercent: number;
+  startYPercent: number;
+  endXPercent: number;
+  endYPercent: number;
+  startRotationDeg: number;
+  zIndex: number;
+}
+
 function TrainCardArt({
   cardType,
   face,
@@ -70,25 +104,28 @@ function TrainCardArt({
 
 function TrainCardFan({
   counts,
+  selectedType,
+  onToggleType,
 }: {
   counts: Record<TrainColor | "locomotive", number>;
+  selectedType: TrainCardType | null;
+  onToggleType: (cardType: TrainCardType) => void;
 }): React.JSX.Element {
   const cardTypes = [...TRAIN_COLORS, "locomotive" as const].filter(
     (cardType) => counts[cardType] > 0,
   );
 
   if (cardTypes.length === 0) {
-    return (
-      <p className="mt-2 text-sm text-rail-700">No train cards in hand.</p>
-    );
+    return <p className="text-sm text-rail-paper">No train cards in hand.</p>;
   }
 
   return (
-    <div className="mt-4 flex justify-center overflow-x-auto pb-2">
-      <div className="relative h-48 w-full max-w-2xl">
+    <div className="flex justify-center overflow-x-auto overflow-y-visible pt-4 pb-1">
+      <div className="relative h-52 w-full max-w-2xl">
         {cardTypes.map((cardType, index) => {
           const count = counts[cardType];
           const badge = count > 1 ? `x${count}` : null;
+          const isSelected = selectedType === cardType;
           const fanCenter = (cardTypes.length - 1) / 2;
           const offsetFromCenter = index - fanCenter;
           const rotation = offsetFromCenter * 13;
@@ -105,8 +142,20 @@ function TrainCardFan({
                 zIndex: 100 + index,
               }}
             >
-              <div className="transition-transform duration-300 ease-out hover:-translate-y-4 focus-visible:-translate-y-4">
-                <div className="relative aspect-[2/3] overflow-hidden rounded-xl shadow-md ring-1 ring-black/10 will-change-transform">
+              <button
+                type="button"
+                onClick={() => onToggleType(cardType)}
+                aria-pressed={isSelected}
+                aria-label={`Toggle ${cardType} route highlight`}
+                className={`transition-transform duration-300 ease-out hover:-translate-y-4 focus-visible:-translate-y-4 ${isSelected ? "-translate-y-4" : ""}`}
+              >
+                <div
+                  className={`relative aspect-[2/3] overflow-hidden rounded-xl shadow-md will-change-transform ${
+                    isSelected
+                      ? "ring-4 ring-yellow-300"
+                      : "ring-1 ring-black/10"
+                  }`}
+                >
                   <TrainCardArt face="front" cardType={cardType} />
 
                   {badge ? (
@@ -115,7 +164,7 @@ function TrainCardFan({
                     </span>
                   ) : null}
                 </div>
-              </div>
+              </button>
             </div>
           );
         })}
@@ -161,10 +210,23 @@ export default function PlayPage() {
   );
   const [hoveredRouteId, setHoveredRouteId] = useState<string | null>(null);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
+  const [selectedTrainType, setSelectedTrainType] =
+    useState<TrainCardType | null>(null);
   const [claimSpend, setClaimSpend] = useState<ClaimCardSpend | null>(null);
+  const [discardAnimationCards, setDiscardAnimationCards] = useState<
+    DiscardAnimationCard[]
+  >([]);
   const [uiError, setUiError] = useState<string | null>(null);
+  const discardAnimationTimeoutRef = useRef<number | null>(null);
 
   const currentPlayer = gameState.playersById[gameState.turn.currentPlayerId];
+  const lastDiscardedCardId =
+    gameState.trainDiscardCardIds.length > 0
+      ? gameState.trainDiscardCardIds[gameState.trainDiscardCardIds.length - 1]
+      : null;
+  const lastDiscardedCard = lastDiscardedCardId
+    ? gameState.trainCardsById[lastDiscardedCardId]
+    : null;
 
   const currentHandCounts = useMemo(
     () => getCardTypeCount(currentPlayer.handCardIds, gameState.trainCardsById),
@@ -182,6 +244,71 @@ export default function PlayPage() {
       return acc;
     }, {});
   }, [gameState]);
+
+  const selectedTrainTypeHighlightByRoute = useMemo(() => {
+    const highlightByRouteId: Record<
+      string,
+      { matches: boolean; minLocomotivesNeeded: number }
+    > = {};
+
+    if (!selectedTrainType) {
+      return highlightByRouteId;
+    }
+
+    const selectedTypeCount = currentHandCounts[selectedTrainType] ?? 0;
+    const locomotiveCount = currentHandCounts.locomotive ?? 0;
+
+    gameState.board.routeIds.forEach((routeId) => {
+      const route = gameState.board.routesById[routeId];
+
+      if (route.claim.claimedByPlayerId !== null) {
+        highlightByRouteId[routeId] = {
+          matches: false,
+          minLocomotivesNeeded: 0,
+        };
+        return;
+      }
+
+      if (selectedTrainType === "locomotive") {
+        highlightByRouteId[routeId] = {
+          matches: locomotiveCount >= route.slotCount,
+          minLocomotivesNeeded: 0,
+        };
+        return;
+      }
+
+      const routeAllowsSelectedColor =
+        route.trainRequirementMode === "any-color" ||
+        route.fixedColor === selectedTrainType;
+
+      if (!routeAllowsSelectedColor || selectedTypeCount <= 0) {
+        highlightByRouteId[routeId] = {
+          matches: false,
+          minLocomotivesNeeded: 0,
+        };
+        return;
+      }
+
+      const selectedCardsUsable = Math.min(selectedTypeCount, route.slotCount);
+      const minLocomotivesNeeded = Math.max(
+        0,
+        route.slotCount - selectedCardsUsable,
+      );
+      const hasEnoughLocomotives = minLocomotivesNeeded <= locomotiveCount;
+
+      highlightByRouteId[routeId] = {
+        matches: hasEnoughLocomotives,
+        minLocomotivesNeeded: hasEnoughLocomotives ? minLocomotivesNeeded : 0,
+      };
+    });
+
+    return highlightByRouteId;
+  }, [
+    currentHandCounts,
+    gameState.board.routeIds,
+    gameState.board.routesById,
+    selectedTrainType,
+  ]);
 
   useEffect(() => {
     if (!selectedRouteId) {
@@ -266,9 +393,107 @@ export default function PlayPage() {
     );
   };
 
+  const queueDiscardAnimationFromSpend = (spend: ClaimCardSpend): void => {
+    if (typeof window !== "undefined") {
+      const reduceMotionQuery = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      );
+      if (reduceMotionQuery.matches) {
+        return;
+      }
+    }
+
+    const spentTypes: TrainCardType[] = [];
+
+    if (spend.color && spend.colorCards > 0) {
+      spentTypes.push(...Array(spend.colorCards).fill(spend.color));
+    }
+
+    if (spend.locomotiveCards > 0) {
+      spentTypes.push(...Array(spend.locomotiveCards).fill("locomotive"));
+    }
+
+    if (spentTypes.length === 0) {
+      return;
+    }
+
+    const cardTypeOrder: TrainCardType[] = [...TRAIN_COLORS, "locomotive"];
+    const animatedCards = spentTypes.map((cardType, index) => {
+      const typeIndex = cardTypeOrder.indexOf(cardType);
+      const typeOffset = (typeIndex - (cardTypeOrder.length - 1) / 2) * 1.6;
+      const laneOffset = (index % 3) * 1.2;
+      const rowOffset = Math.floor(index / 3) * 0.9;
+
+      return {
+        id: `${cardType}-${Date.now()}-${index}`,
+        cardType,
+        delayMs: index * DISCARD_ANIMATION_STAGGER_MS,
+        startXPercent: 28 + typeOffset + laneOffset,
+        startYPercent: 56 + rowOffset,
+        endXPercent: 86.5 + ((index % 2) * 0.9 - 0.45),
+        endYPercent: 44 + ((index % 3) - 1) * 0.7,
+        startRotationDeg: -16 + (index % 5) * 6,
+        zIndex: 40 + index,
+      } satisfies DiscardAnimationCard;
+    });
+
+    setDiscardAnimationCards(animatedCards);
+
+    if (discardAnimationTimeoutRef.current !== null) {
+      window.clearTimeout(discardAnimationTimeoutRef.current);
+    }
+
+    const animationRuntimeMs =
+      (animatedCards.length - 1) * DISCARD_ANIMATION_STAGGER_MS +
+      DISCARD_ANIMATION_DURATION_MS +
+      DISCARD_ANIMATION_CLEAR_BUFFER_MS;
+
+    discardAnimationTimeoutRef.current = window.setTimeout(() => {
+      setDiscardAnimationCards([]);
+      discardAnimationTimeoutRef.current = null;
+    }, animationRuntimeMs);
+  };
+
+  const handleClaimSelectedRoute = (): void => {
+    if (!selectedRoute || !claimSpend || !claimLegality.isLegal) {
+      return;
+    }
+
+    const claimSpendSnapshot: ClaimCardSpend = {
+      color: claimSpend.color,
+      colorCards: claimSpend.colorCards,
+      locomotiveCards: claimSpend.locomotiveCards,
+    };
+
+    queueDiscardAnimationFromSpend(claimSpendSnapshot);
+
+    applyTransition((previous) => {
+      const next = claimRoute(
+        previous,
+        selectedRoute.id,
+        claimSpendSnapshot,
+        previous.turn.currentPlayerId,
+      );
+      setSelectedRouteId(null);
+      setClaimSpend(null);
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (discardAnimationTimeoutRef.current !== null) {
+        window.clearTimeout(discardAnimationTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-      <section className="rounded-2xl border border-rail-300/70 bg-white/80 p-5 shadow-card sm:p-6">
+      <section
+        className="relative overflow-visible rounded-2xl border border-emerald-950/90 p-5 sm:p-6"
+        style={feltSectionStyle}
+      >
         <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">
           Pick Train Cards
         </h2>
@@ -283,77 +508,124 @@ export default function PlayPage() {
           </div>
         ) : null}
 
-        <div className="mt-4 flex flex-wrap items-start gap-8">
-          <button
-            type="button"
-            onClick={() =>
-              applyTransition((previous) => drawTrainCardFromDeck(previous))
-            }
-            disabled={!canDrawFromDeck(gameState).isLegal}
-            className="w-28 shrink-0 p-0 text-left transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-45"
-          >
-            <div className="aspect-[2/3] w-28 overflow-hidden rounded-xl">
-              <TrainCardArt face="back" />
+        <div className="mt-4 flex flex-wrap items-start gap-6 lg:flex-nowrap">
+          <div className="flex min-w-0 flex-1 flex-wrap items-start gap-8">
+            <button
+              type="button"
+              onClick={() =>
+                applyTransition((previous) => drawTrainCardFromDeck(previous))
+              }
+              disabled={!canDrawFromDeck(gameState).isLegal}
+              className="w-28 shrink-0 p-0 text-left transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <div className="aspect-[2/3] w-28 overflow-hidden rounded-xl">
+                <TrainCardArt face="back" />
+              </div>
+              <p className="mt-2 text-xs text-rail-700">
+                Cards left: {gameState.trainDeckCardIds.length}
+              </p>
+            </button>
+
+            <div className="flex flex-wrap gap-2">
+              {gameState.faceUpCardIds.map((cardId, index) => {
+                const card = gameState.trainCardsById[cardId];
+                const legal = canDrawFaceUpCard(gameState, index);
+
+                return (
+                  <button
+                    key={cardId}
+                    type="button"
+                    onClick={() =>
+                      applyTransition((previous) =>
+                        drawTrainCardFromFaceUp(previous, index),
+                      )
+                    }
+                    disabled={!legal.isLegal}
+                    className="w-28 shrink-0 p-0 text-left text-xs font-bold transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <div className="aspect-[2/3] w-28 overflow-hidden rounded-xl">
+                      <TrainCardArt face="front" cardType={card.type} />
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-            <p className="mt-2 text-xs text-rail-700">
-              Cards left: {gameState.trainDeckCardIds.length}
-            </p>
-          </button>
-
-          <div className="flex flex-wrap gap-2">
-            {gameState.faceUpCardIds.map((cardId, index) => {
-              const card = gameState.trainCardsById[cardId];
-              const legal = canDrawFaceUpCard(gameState, index);
-
-              return (
-                <button
-                  key={cardId}
-                  type="button"
-                  onClick={() =>
-                    applyTransition((previous) =>
-                      drawTrainCardFromFaceUp(previous, index),
-                    )
-                  }
-                  disabled={!legal.isLegal}
-                  className="w-28 shrink-0 p-0 text-left text-xs font-bold transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <div className="aspect-[2/3] w-28 overflow-hidden rounded-xl">
-                    <TrainCardArt face="front" cardType={card.type} />
-                  </div>
-                </button>
-              );
-            })}
           </div>
+
+          <aside className="ml-auto flex shrink-0 flex-col items-center gap-2 border-l border-emerald-900/60 pl-5 lg:pl-6">
+            <div className="flex h-44 w-32 items-center justify-center">
+              <div className="aspect-[2/3] w-28 rotate-90 overflow-hidden rounded-xl shadow-md ring-1 ring-black/15">
+                <TrainCardArt
+                  face={lastDiscardedCard ? "front" : "back"}
+                  cardType={lastDiscardedCard?.type}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-rail-700">
+              {gameState.trainDiscardCardIds.length} cards
+            </p>
+          </aside>
         </div>
+
+        {discardAnimationCards.length > 0 ? (
+          <div
+            className="pointer-events-none absolute inset-0 z-30 overflow-visible"
+            aria-hidden="true"
+          >
+            {discardAnimationCards.map((animatedCard) => (
+              <div
+                key={animatedCard.id}
+                className="absolute aspect-[2/3] w-20 overflow-hidden rounded-xl shadow-xl ring-1 ring-black/20"
+                style={{
+                  zIndex: animatedCard.zIndex,
+                  animationName: "discardFlyToPile",
+                  animationDuration: `${DISCARD_ANIMATION_DURATION_MS}ms`,
+                  animationTimingFunction: "cubic-bezier(0.2, 0.85, 0.28, 1)",
+                  animationDelay: `${animatedCard.delayMs}ms`,
+                  animationFillMode: "forwards",
+                  ["--discard-start-x" as string]: `${animatedCard.startXPercent}%`,
+                  ["--discard-start-y" as string]: `${animatedCard.startYPercent}%`,
+                  ["--discard-end-x" as string]: `${animatedCard.endXPercent}%`,
+                  ["--discard-end-y" as string]: `${animatedCard.endYPercent}%`,
+                  ["--discard-start-rotation" as string]: `${animatedCard.startRotationDeg}deg`,
+                }}
+              >
+                <TrainCardArt face="front" cardType={animatedCard.cardType} />
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        <style>{`
+          @keyframes discardFlyToPile {
+            0% {
+              left: var(--discard-start-x);
+              top: var(--discard-start-y);
+              transform: translate(-50%, -50%) rotate(var(--discard-start-rotation));
+              opacity: 0;
+            }
+
+            12% {
+              opacity: 1;
+            }
+
+            100% {
+              left: var(--discard-end-x);
+              top: var(--discard-end-y);
+              transform: translate(-50%, -50%) rotate(90deg) scale(0.86);
+              opacity: 0.2;
+            }
+          }
+        `}</style>
       </section>
 
-      <section className="rounded-2xl border border-rail-300/70 bg-white/80 p-5 shadow-card sm:p-6">
-        <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">
-          Board
-        </h2>
-        <p className="mt-2 text-sm leading-relaxed text-rail-700 sm:text-base">
-          Unclaimed links are invisible until claimed. Hover any unclaimed link:
-          gold aura means you can claim it now, gray means you cannot.
-        </p>
-
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-rail-700">
-          <span className="rounded-full bg-yellow-100 px-2 py-1 text-yellow-900">
-            Gold aura = claimable now
-          </span>
-          <span className="rounded-full bg-slate-200 px-2 py-1 text-slate-800">
-            Gray aura = insufficient cards/trains
-          </span>
-          <span className="rounded-full bg-sky-100 px-2 py-1 text-sky-900">
-            Player 1 claimed
-          </span>
-          <span className="rounded-full bg-rose-100 px-2 py-1 text-rose-900">
-            Player 2 claimed
-          </span>
-        </div>
-
+      <section
+        className="overflow-visible rounded-2xl border border-emerald-950/90 p-5 sm:p-6"
+        style={feltSectionStyle}
+      >
         <div
-          className="relative mt-4 overflow-hidden rounded-xl border border-rail-300/70 bg-rail-paper/70"
-          style={boardStyle}
+          className="relative mt-4 mb-56 overflow-visible rounded-xl border border-emerald-900/85"
+          style={{ ...boardStyle, ...feltBoardWellStyle }}
         >
           <img
             src="img/USA_map.jpg"
@@ -374,15 +646,47 @@ export default function PlayPage() {
               const isHoveredRoute = hoveredRouteId === route.id;
               const isSelectedRoute = selectedRouteId === route.id;
               const defaultLegality = defaultClaimLegalityByRoute[route.id];
+              const selectedTrainTypeHighlight =
+                selectedTrainTypeHighlightByRoute[route.id];
+              const isSelectedTrainTypeMatch =
+                selectedTrainTypeHighlight?.matches ?? false;
+              const minLocomotivesNeeded =
+                selectedTrainTypeHighlight?.minLocomotivesNeeded ?? 0;
+              const isRainbowPin =
+                isSelectedTrainTypeMatch &&
+                minLocomotivesNeeded > 0 &&
+                pin.slotIndex >= route.slotCount - minLocomotivesNeeded;
 
               let visualClass = "opacity-0 bg-transparent";
+              const pinStyle: React.CSSProperties = {
+                left: `${pin.xPercent}%`,
+                top: `${pin.yPercent}%`,
+                width: "var(--pin-width)",
+                height: "var(--pin-height)",
+                transform: `translate(-50%, -50%) rotate(${pin.angleDeg}deg)`,
+              };
 
               if (
                 isClaimed &&
                 (claimedBy === "player-1" || claimedBy === "player-2")
               ) {
                 visualClass = `${CLAIMED_PIN_CLASS_BY_PLAYER[claimedBy]}`;
-              } else if (isHoveredRoute || isSelectedRoute) {
+              } else if (isHoveredRoute) {
+                visualClass = "opacity-100 bg-transparent ring-0";
+                pinStyle.border = "2px solid transparent";
+                pinStyle.backgroundImage = `linear-gradient(transparent, transparent), ${RAINBOW_RING_GRADIENT}`;
+                pinStyle.backgroundOrigin = "border-box";
+                pinStyle.backgroundClip = "padding-box, border-box";
+              } else if (isRainbowPin) {
+                visualClass = "opacity-100 bg-transparent ring-0";
+                pinStyle.border = "2px solid transparent";
+                pinStyle.backgroundImage = `linear-gradient(transparent, transparent), ${RAINBOW_RING_GRADIENT}`;
+                pinStyle.backgroundOrigin = "border-box";
+                pinStyle.backgroundClip = "padding-box, border-box";
+              } else if (isSelectedTrainTypeMatch) {
+                visualClass =
+                  "opacity-100 bg-yellow-300/45 ring-4 ring-yellow-300/95";
+              } else if (isSelectedRoute) {
                 visualClass = defaultLegality.isLegal
                   ? "opacity-100 bg-yellow-300/35 ring-4 ring-yellow-300/95"
                   : "opacity-100 bg-slate-300/35 ring-4 ring-slate-400/95";
@@ -406,17 +710,25 @@ export default function PlayPage() {
                       existing === route.id ? null : existing,
                     )
                   }
-                  className={`absolute rounded-sm shadow-sm ring-1 ring-white/70 transition ${visualClass}`}
-                  style={{
-                    left: `${pin.xPercent}%`,
-                    top: `${pin.yPercent}%`,
-                    width: "var(--pin-width)",
-                    height: "var(--pin-height)",
-                    transform: `translate(-50%, -50%) rotate(${pin.angleDeg}deg)`,
-                  }}
+                  className={`absolute rounded-sm shadow-sm transition ${visualClass}`}
+                  style={pinStyle}
                 ></button>
               );
             })}
+          </div>
+
+          <div className="pointer-events-none absolute inset-x-0 top-full flex justify-center px-3">
+            <div className="pointer-events-auto w-full max-w-3xl px-2">
+              <TrainCardFan
+                counts={currentHandCounts}
+                selectedType={selectedTrainType}
+                onToggleType={(nextType) =>
+                  setSelectedTrainType((previous) =>
+                    previous === nextType ? null : nextType,
+                  )
+                }
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -560,23 +872,7 @@ export default function PlayPage() {
 
               <button
                 type="button"
-                onClick={() =>
-                  applyTransition((previous) => {
-                    if (!claimSpend) {
-                      return previous;
-                    }
-
-                    const next = claimRoute(
-                      previous,
-                      selectedRoute.id,
-                      claimSpend,
-                      previous.turn.currentPlayerId,
-                    );
-                    setSelectedRouteId(null);
-                    setClaimSpend(null);
-                    return next;
-                  })
-                }
+                onClick={handleClaimSelectedRoute}
                 disabled={!claimLegality.isLegal}
                 className="rounded-xl bg-rail-700 px-4 py-2 text-sm font-extrabold text-rail-paper disabled:cursor-not-allowed disabled:opacity-45"
               >
@@ -667,11 +963,6 @@ export default function PlayPage() {
         <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">
           Current Player Private Details
         </h2>
-
-        <div className="mt-4">
-          <h3 className="text-base font-bold">Train Cards in Hand</h3>
-          <TrainCardFan counts={currentHandCounts} />
-        </div>
 
         <div className="mt-4">
           <h3 className="text-base font-bold">Claimed Routes</h3>

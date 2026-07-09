@@ -68,6 +68,62 @@ function TrainCardArt({
   );
 }
 
+function TrainCardFan({
+  counts,
+}: {
+  counts: Record<TrainColor | "locomotive", number>;
+}): React.JSX.Element {
+  const cardTypes = [...TRAIN_COLORS, "locomotive" as const].filter(
+    (cardType) => counts[cardType] > 0,
+  );
+
+  if (cardTypes.length === 0) {
+    return (
+      <p className="mt-2 text-sm text-rail-700">No train cards in hand.</p>
+    );
+  }
+
+  return (
+    <div className="mt-4 flex justify-center overflow-x-auto pb-2">
+      <div className="relative h-48 w-full max-w-2xl">
+        {cardTypes.map((cardType, index) => {
+          const count = counts[cardType];
+          const badge = count > 1 ? `x${count}` : null;
+          const fanCenter = (cardTypes.length - 1) / 2;
+          const offsetFromCenter = index - fanCenter;
+          const rotation = offsetFromCenter * 13;
+          const translateX = offsetFromCenter * 52;
+          const translateY = Math.abs(offsetFromCenter) * 14;
+
+          return (
+            <div
+              key={cardType}
+              className="absolute left-1/2 top-0 w-24"
+              style={{
+                transform: `translateX(-50%) translateX(${translateX}px) translateY(${translateY}px) rotate(${rotation}deg)`,
+                transformOrigin: "center bottom",
+                zIndex: 100 + index,
+              }}
+            >
+              <div className="transition-transform duration-300 ease-out hover:-translate-y-4 focus-visible:-translate-y-4">
+                <div className="relative aspect-[2/3] overflow-hidden rounded-xl shadow-md ring-1 ring-black/10 will-change-transform">
+                  <TrainCardArt face="front" cardType={cardType} />
+
+                  {badge ? (
+                    <span className="absolute left-2 top-2 rounded-full bg-black/80 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-sm">
+                      {badge}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
@@ -614,14 +670,7 @@ export default function PlayPage() {
 
         <div className="mt-4">
           <h3 className="text-base font-bold">Train Cards in Hand</h3>
-          <ul className="mt-2 list-disc space-y-1 pl-5">
-            {TRAIN_COLORS.map((color) => (
-              <li key={color}>
-                {color}: {currentHandCounts[color]}
-              </li>
-            ))}
-            <li>locomotive: {currentHandCounts.locomotive}</li>
-          </ul>
+          <TrainCardFan counts={currentHandCounts} />
         </div>
 
         <div className="mt-4">

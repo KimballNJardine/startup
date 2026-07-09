@@ -30,17 +30,43 @@ const CLAIMED_PIN_CLASS_BY_PLAYER = {
   "player-2": "bg-rose-700/95 ring-rose-300/80",
 } as const;
 
-const CARD_CLASS_BY_TYPE = {
-  black: "bg-neutral-800 text-neutral-100",
-  blue: "bg-blue-700 text-blue-50",
-  green: "bg-green-700 text-green-50",
-  orange: "bg-orange-500 text-orange-950",
-  pink: "bg-pink-500 text-pink-950",
-  red: "bg-red-700 text-red-50",
-  white: "bg-white text-neutral-900 ring-1 ring-neutral-300",
-  yellow: "bg-yellow-400 text-yellow-950",
-  locomotive: "bg-violet-900 text-violet-50",
-} as const;
+const TRAIN_CARD_IMAGE_BY_TYPE = {
+  black: "img/split_trains/train_black.png",
+  blue: "img/split_trains/train_blue.png",
+  green: "img/split_trains/train_green.png",
+  locomotive: "img/split_trains/train_rainbow.png",
+  orange: "img/split_trains/train_orange.png",
+  pink: "img/split_trains/train_purple.png",
+  red: "img/split_trains/train_red.png",
+  white: "img/split_trains/train_white.png",
+  yellow: "img/split_trains/train_yellow.png",
+} as const satisfies Record<TrainColor | "locomotive", string>;
+
+const TRAIN_CARD_BACK_IMAGE = "img/split_trains/train_back.png";
+
+function TrainCardArt({
+  cardType,
+  face,
+}: {
+  cardType?: TrainColor | "locomotive";
+  face: "front" | "back";
+}): React.JSX.Element {
+  const imageSrc =
+    face === "back"
+      ? TRAIN_CARD_BACK_IMAGE
+      : cardType
+        ? TRAIN_CARD_IMAGE_BY_TYPE[cardType]
+        : TRAIN_CARD_BACK_IMAGE;
+
+  const altText =
+    face === "back"
+      ? "Train card back"
+      : `${cardType ? cardType : "train"} train card`;
+
+  return (
+    <img src={imageSrc} alt={altText} className="h-full w-full object-cover" />
+  );
+}
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -201,17 +227,19 @@ export default function PlayPage() {
           </div>
         ) : null}
 
-        <div className="mt-4 flex flex-wrap items-start gap-4">
+        <div className="mt-4 flex flex-wrap items-start gap-8">
           <button
             type="button"
             onClick={() =>
               applyTransition((previous) => drawTrainCardFromDeck(previous))
             }
             disabled={!canDrawFromDeck(gameState).isLegal}
-            className="rounded-xl border border-rail-300 bg-rail-paper px-4 py-3 text-left disabled:cursor-not-allowed disabled:opacity-45"
+            className="w-28 shrink-0 p-0 text-left transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-45"
           >
-            <p className="text-sm font-extrabold">Draw from Deck</p>
-            <p className="text-xs text-rail-700">
+            <div className="aspect-[2/3] w-28 overflow-hidden rounded-xl">
+              <TrainCardArt face="back" />
+            </div>
+            <p className="mt-2 text-xs text-rail-700">
               Cards left: {gameState.trainDeckCardIds.length}
             </p>
           </button>
@@ -231,12 +259,11 @@ export default function PlayPage() {
                     )
                   }
                   disabled={!legal.isLegal}
-                  className={`h-20 w-28 rounded-xl p-2 text-left text-xs font-bold shadow-sm transition ${CARD_CLASS_BY_TYPE[card.type]} disabled:cursor-not-allowed disabled:opacity-40`}
+                  className="w-28 shrink-0 p-0 text-left text-xs font-bold transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <p>{card.type.toUpperCase()}</p>
-                  <p className="mt-2 text-[10px] font-semibold">
-                    Face-up #{index + 1}
-                  </p>
+                  <div className="aspect-[2/3] w-28 overflow-hidden rounded-xl">
+                    <TrainCardArt face="front" cardType={card.type} />
+                  </div>
                 </button>
               );
             })}

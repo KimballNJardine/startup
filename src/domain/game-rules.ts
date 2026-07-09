@@ -234,9 +234,13 @@ export function drawTrainCardFromFaceUp(state: LocalGameState, faceUpIndex: numb
   const player = next.playersById[next.turn.currentPlayerId];
   const selectedCardId = next.faceUpCardIds[faceUpIndex];
   const selectedCard = next.trainCardsById[selectedCardId];
+  const replacementCardId = drawTopDeckCard(next);
 
-  next.faceUpCardIds.splice(faceUpIndex, 1);
-  refillFaceUpCards(next);
+  if (replacementCardId) {
+    next.faceUpCardIds[faceUpIndex] = replacementCardId;
+  } else {
+    next.faceUpCardIds.splice(faceUpIndex, 1);
+  }
 
   player.handCardIds = [...player.handCardIds, selectedCardId];
 

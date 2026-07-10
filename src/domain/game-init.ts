@@ -1,4 +1,5 @@
 import { createInitialBoardState } from './board-data';
+import { DESTINATION_TICKETS } from './destination-ticket';
 import type { LocalGameState, PlayerId, PlayerState, TrainCard } from './game-types';
 import { TRAIN_COLORS, type TrainCardType } from './train-types';
 
@@ -69,6 +70,7 @@ function createPlayers(): Record<PlayerId, PlayerState> {
       displayName: 'Player 1',
       trainsLeft: DEFAULT_TRAINS_PER_PLAYER,
       handCardIds: [],
+      destinationTicketIds: [],
       claimedRouteIds: [],
       score: 0,
     },
@@ -77,6 +79,7 @@ function createPlayers(): Record<PlayerId, PlayerState> {
       displayName: 'Player 2',
       trainsLeft: DEFAULT_TRAINS_PER_PLAYER,
       handCardIds: [],
+      destinationTicketIds: [],
       claimedRouteIds: [],
       score: 0,
     },
@@ -92,6 +95,14 @@ export function createInitialLocalGameState(options: CreateLocalGameOptions = {}
   const rng = createRng(options.seed);
   const cards = createStandardTrainCards();
   const shuffledCards = shuffle(cards, rng);
+  const destinationTicketsById = DESTINATION_TICKETS.reduce<LocalGameState['destinationTicketsById']>((acc, ticket) => {
+    acc[ticket.id] = ticket;
+    return acc;
+  }, {});
+  const destinationTicketDeckIds = shuffle(
+    DESTINATION_TICKETS.map((ticket) => ticket.id),
+    rng,
+  );
   const cardsById = shuffledCards.reduce<Record<string, TrainCard>>((acc, card) => {
     acc[card.id] = card;
     return acc;
@@ -121,6 +132,10 @@ export function createInitialLocalGameState(options: CreateLocalGameOptions = {}
       currentPlayerId: startingPlayerId,
       drawsRemaining: 2,
     },
+    destinationTicketsById,
+    destinationTicketDeckIds,
+    destinationTicketDiscardIds: [],
+    destinationTicketSelection: null,
     trainCardsById: cardsById,
     trainDeckCardIds: deckCardIds,
     trainDiscardCardIds: [],

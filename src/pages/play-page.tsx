@@ -2,16 +2,22 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   TRAIN_COLORS,
   canClaimRoute,
+  canFinalizeDestinationTicketSelection,
   canCurrentPlayerClaimRouteWithDefaultSpend,
+  canDrawDestinationTicket,
   canDrawFaceUpCard,
   canDrawFromDeck,
   claimRoute,
   createInitialLocalGameState,
+  DESTINATION_TICKETS,
+  drawDestinationTicket,
   drawTrainCardFromDeck,
   drawTrainCardFromFaceUp,
+  finalizeDestinationTicketSelection,
   getCardTypeCount,
   getDefaultClaimSpend,
   type ClaimCardSpend,
+  type DestinationTicket,
   type LocalGameState,
   type TrainCardType,
   type TrainColor,
@@ -173,6 +179,35 @@ function TrainCardFan({
   );
 }
 
+function DestinationTicketCard({
+  ticket,
+}: {
+  ticket: DestinationTicket;
+}): React.JSX.Element {
+  return (
+    <article className="group relative overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-red-100/90 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-red-200/35 blur-xl transition group-hover:bg-red-300/45" />
+      <div className="mt-1 flex items-center gap-3">
+        <p className="text-base font-extrabold text-rail-900">
+          {ticket.originCity}
+        </p>
+        <span className="h-px flex-1 border-t-2 border-dashed border-red-400/70" />
+        <div className="flex items-center gap-2">
+          <p className="text-base font-extrabold text-rail-900">
+            {ticket.destinationCity}
+          </p>
+          <span className="inline-flex rounded-full bg-red-700 px-2.5 py-1 text-xs font-extrabold text-white">
+            {ticket.points}
+          </span>
+        </div>
+      </div>
+      <p className="mt-3 text-xs font-extrabold uppercase tracking-[0.2em] text-red-900/75">
+        Destination Ticket
+      </p>
+    </article>
+  );
+}
+
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
@@ -217,9 +252,34 @@ export default function PlayPage() {
     DiscardAnimationCard[]
   >([]);
   const [uiError, setUiError] = useState<string | null>(null);
+  const [
+    selectedPendingDestinationTicketIds,
+    setSelectedPendingDestinationTicketIds,
+  ] = useState<string[]>([]);
   const discardAnimationTimeoutRef = useRef<number | null>(null);
 
   const currentPlayer = gameState.playersById[gameState.turn.currentPlayerId];
+  const pendingDestinationTicketSelection =
+    gameState.destinationTicketSelection;
+  const destinationTicketDeckCount = gameState.destinationTicketDeckIds.length;
+  const destinationDrawLegality = canDrawDestinationTicket(gameState);
+  const pendingDestinationTickets =
+    pendingDestinationTicketSelection &&
+    pendingDestinationTicketSelection.playerId ===
+      gameState.turn.currentPlayerId
+      ? pendingDestinationTicketSelection.pendingTicketIds
+          .map((ticketId) => gameState.destinationTicketsById[ticketId])
+          .filter((ticket): ticket is DestinationTicket => Boolean(ticket))
+      : [];
+  const destinationSelectionLegality = pendingDestinationTicketSelection
+    ? canFinalizeDestinationTicketSelection(
+        gameState,
+        selectedPendingDestinationTicketIds,
+      )
+    : null;
+  const currentPlayerDestinationTickets = currentPlayer.destinationTicketIds
+    .map((ticketId) => gameState.destinationTicketsById[ticketId])
+    .filter((ticket): ticket is DestinationTicket => Boolean(ticket));
   const lastDiscardedCardId =
     gameState.trainDiscardCardIds.length > 0
       ? gameState.trainDiscardCardIds[gameState.trainDiscardCardIds.length - 1]
@@ -488,19 +548,45 @@ export default function PlayPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!pendingDestinationTicketSelection) {
+      setSelectedPendingDestinationTicketIds([]);
+      return;
+    }
+
+    setSelectedPendingDestinationTicketIds([]);
+  }, [pendingDestinationTicketSelection]);
+
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <section
         className="relative overflow-visible rounded-2xl border border-emerald-950/90 p-5 sm:p-6"
         style={feltSectionStyle}
       >
-        <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">
-          Pick Train Cards
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">
+            Pick Train Cards
+          </h2>
+          <button
+            type="button"
+            onClick={() =>
+              applyTransition((previous) => drawDestinationTicket(previous))
+            }
+            disabled={!destinationDrawLegality.isLegal}
+            className="rounded-xl bg-rail-700 px-4 py-2 text-sm font-extrabold text-rail-paper disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            Draw 3 Destination Tickets
+          </button>
+        </div>
         <p className="mt-2 text-sm text-rail-700">
           Current turn: <strong>{currentPlayer.displayName}</strong> (draws
           remaining: {gameState.turn.drawsRemaining})
         </p>
+        {!destinationDrawLegality.isLegal ? (
+          <p className="mt-2 text-sm text-red-700">
+            {destinationDrawLegality.reason}
+          </p>
+        ) : null}
 
         {uiError ? (
           <div className="mt-3 rounded-xl border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800">
@@ -717,17 +803,43 @@ export default function PlayPage() {
             })}
           </div>
 
-          <div className="pointer-events-none absolute inset-x-0 top-full flex justify-center px-3">
-            <div className="pointer-events-auto w-full max-w-3xl px-2">
-              <TrainCardFan
-                counts={currentHandCounts}
-                selectedType={selectedTrainType}
-                onToggleType={(nextType) =>
-                  setSelectedTrainType((previous) =>
-                    previous === nextType ? null : nextType,
-                  )
-                }
-              />
+          <div className="pointer-events-none absolute inset-x-0 top-full px-3">
+            <div className="pointer-events-auto mx-auto flex w-full max-w-5xl items-start gap-4 px-2">
+              <aside className="w-72 shrink-0">
+                {currentPlayerDestinationTickets.length === 0 ? (
+                  <p className="pt-6 text-xs font-semibold uppercase tracking-[0.16em] text-rail-paper/85">
+                    Draw destination tickets to build routes.
+                  </p>
+                ) : (
+                  <div className="pt-4">
+                    {currentPlayerDestinationTickets.map((ticket, index) => (
+                      <div
+                        key={ticket.id}
+                        className="relative"
+                        style={{
+                          marginTop:
+                            index === 0 ? 0 : "clamp(-2.4rem, -5vw, -1.75rem)",
+                          zIndex: 20 + index,
+                        }}
+                      >
+                        <DestinationTicketCard ticket={ticket} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </aside>
+
+              <div className="min-w-0 flex-1 pl-8">
+                <TrainCardFan
+                  counts={currentHandCounts}
+                  selectedType={selectedTrainType}
+                  onToggleType={(nextType) =>
+                    setSelectedTrainType((previous) =>
+                      previous === nextType ? null : nextType,
+                    )
+                  }
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -885,6 +997,92 @@ export default function PlayPage() {
             </div>
           </div>
         )}
+      </section>
+
+      <section className="rounded-2xl border border-rail-300/70 bg-white/80 p-5 shadow-card sm:p-6">
+        <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">
+          Destination Tickets
+        </h2>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <p className="text-sm text-rail-700">
+            Deck remaining: <strong>{destinationTicketDeckCount}</strong> of{" "}
+            {DESTINATION_TICKETS.length}
+          </p>
+          <p className="text-sm text-rail-700">
+            Discard:{" "}
+            <strong>{gameState.destinationTicketDiscardIds.length}</strong>
+          </p>
+        </div>
+        <p className="mt-3 text-sm text-rail-700">
+          Drawn destination tickets are shown beside the train card fan.
+        </p>
+
+        {pendingDestinationTickets.length > 0 ? (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/70 p-4">
+            <h3 className="text-sm font-extrabold uppercase tracking-[0.14em] text-amber-900">
+              Choose Destination Tickets to Keep
+            </h3>
+            <p className="mt-2 text-sm text-amber-900/80">
+              Keep at least 1 ticket from this draw. Unselected tickets are
+              discarded.
+            </p>
+
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {pendingDestinationTickets.map((ticket) => {
+                const isSelected = selectedPendingDestinationTicketIds.includes(
+                  ticket.id,
+                );
+
+                return (
+                  <button
+                    key={ticket.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedPendingDestinationTicketIds((previous) =>
+                        previous.includes(ticket.id)
+                          ? previous.filter(
+                              (ticketId) => ticketId !== ticket.id,
+                            )
+                          : [...previous, ticket.id],
+                      )
+                    }
+                    aria-pressed={isSelected}
+                    className={`rounded-2xl text-left transition ${
+                      isSelected
+                        ? "ring-4 ring-amber-400"
+                        : "ring-1 ring-transparent"
+                    }`}
+                  >
+                    <DestinationTicketCard ticket={ticket} />
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() =>
+                  applyTransition((previous) =>
+                    finalizeDestinationTicketSelection(
+                      previous,
+                      selectedPendingDestinationTicketIds,
+                    ),
+                  )
+                }
+                disabled={!destinationSelectionLegality?.isLegal}
+                className="rounded-xl bg-amber-700 px-4 py-2 text-sm font-extrabold text-amber-50 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                Confirm Kept Tickets
+              </button>
+              {!destinationSelectionLegality?.isLegal ? (
+                <p className="text-sm text-red-700">
+                  {destinationSelectionLegality?.reason}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-2xl border border-rail-300/70 bg-white/80 p-5 shadow-card sm:p-6">

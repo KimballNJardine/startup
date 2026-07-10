@@ -1,5 +1,6 @@
 export * from './board-pin-registry';
 export * from './board-data';
+export * from './destination-ticket';
 export * from './game-init';
 export * from './game-rules';
 export * from './game-types';

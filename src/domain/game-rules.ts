@@ -8,6 +8,9 @@ import { getCardTypeCount } from './game-init';
 import type { ClaimCardSpend, ClaimLegalityResult, LocalGameState, PlayerId } from './game-types';
 import type { TrainCardType, TrainColor } from './train-types';
 
+const DESTINATION_TICKET_DRAW_COUNT = 3;
+const DESTINATION_TICKET_MINIMUM_KEEP_COUNT = 1;
+
 const SEGMENT_POINTS_BY_LENGTH: Record<number, number> = {
   1: 1,
   2: 2,
@@ -37,11 +40,156 @@ function cloneState(state: LocalGameState): LocalGameState {
       'player-1': { ...state.playersById['player-1'] },
       'player-2': { ...state.playersById['player-2'] },
     },
+    destinationTicketsById: { ...state.destinationTicketsById },
+    destinationTicketDeckIds: [...state.destinationTicketDeckIds],
+    destinationTicketDiscardIds: [...state.destinationTicketDiscardIds],
+    destinationTicketSelection: state.destinationTicketSelection
+      ? {
+          ...state.destinationTicketSelection,
+          pendingTicketIds: [...state.destinationTicketSelection.pendingTicketIds],
+        }
+      : null,
     trainDeckCardIds: [...state.trainDeckCardIds],
     trainDiscardCardIds: [...state.trainDiscardCardIds],
     faceUpCardIds: [...state.faceUpCardIds],
     notifications: [...state.notifications],
   };
+}
+
+export function canDrawDestinationTicket(state: LocalGameState): ClaimLegalityResult {
+  if (state.destinationTicketSelection) {
+    return {
+      isLegal: false,
+      reason: 'Resolve the current destination ticket selection first.',
+    };
+  }
+
+  if (state.destinationTicketDeckIds.length <= 0) {
+    return {
+      isLegal: false,
+      reason: 'No destination tickets remain in the deck.',
+    };
+  }
+
+  return { isLegal: true, reason: null };
+}
+
+export function drawDestinationTicket(state: LocalGameState): LocalGameState {
+  const legal = canDrawDestinationTicket(state);
+  if (!legal.isLegal) {
+    throw new Error(legal.reason ?? 'Draw destination ticket is not legal.');
+  }
+
+  const next = cloneState(state);
+  const drawCount = Math.min(
+    DESTINATION_TICKET_DRAW_COUNT,
+    next.destinationTicketDeckIds.length,
+  );
+  const drawnTicketIds = next.destinationTicketDeckIds.splice(0, drawCount);
+
+  if (drawnTicketIds.length <= 0) {
+    throw new Error('Unable to draw destination ticket.');
+  }
+
+  next.destinationTicketSelection = {
+    playerId: next.turn.currentPlayerId,
+    pendingTicketIds: drawnTicketIds,
+    minimumKeepCount: DESTINATION_TICKET_MINIMUM_KEEP_COUNT,
+  };
+  next.notifications.push(
+    `${next.turn.currentPlayerId} drew ${drawnTicketIds.length} destination tickets and must keep at least ${DESTINATION_TICKET_MINIMUM_KEEP_COUNT}.`,
+  );
+
+  return next;
+}
+
+export function canFinalizeDestinationTicketSelection(
+  state: LocalGameState,
+  keptTicketIds: string[],
+): ClaimLegalityResult {
+  const selection = state.destinationTicketSelection;
+
+  if (!selection) {
+    return {
+      isLegal: false,
+      reason: 'No destination ticket selection is pending.',
+    };
+  }
+
+  if (selection.playerId !== state.turn.currentPlayerId) {
+    return {
+      isLegal: false,
+      reason: 'Only the active player can finalize destination ticket selection.',
+    };
+  }
+
+  const uniqueKeptIds = new Set(keptTicketIds);
+  if (uniqueKeptIds.size !== keptTicketIds.length) {
+    return {
+      isLegal: false,
+      reason: 'Duplicate destination ticket selections are not allowed.',
+    };
+  }
+
+  if (keptTicketIds.length < selection.minimumKeepCount) {
+    return {
+      isLegal: false,
+      reason: `Keep at least ${selection.minimumKeepCount} destination ticket(s).`,
+    };
+  }
+
+  if (keptTicketIds.length > selection.pendingTicketIds.length) {
+    return {
+      isLegal: false,
+      reason: 'Cannot keep more destination tickets than were drawn.',
+    };
+  }
+
+  const pendingSet = new Set(selection.pendingTicketIds);
+  const hasUnknownSelection = keptTicketIds.some((ticketId) => !pendingSet.has(ticketId));
+  if (hasUnknownSelection) {
+    return {
+      isLegal: false,
+      reason: 'Selected destination ticket is not part of the pending draw.',
+    };
+  }
+
+  return { isLegal: true, reason: null };
+}
+
+export function finalizeDestinationTicketSelection(
+  state: LocalGameState,
+  keptTicketIds: string[],
+): LocalGameState {
+  const legal = canFinalizeDestinationTicketSelection(state, keptTicketIds);
+  if (!legal.isLegal) {
+    throw new Error(legal.reason ?? 'Destination ticket selection is not legal.');
+  }
+
+  const next = cloneState(state);
+  const selection = next.destinationTicketSelection;
+
+  if (!selection) {
+    throw new Error('Destination ticket selection is missing.');
+  }
+
+  const player = next.playersById[selection.playerId];
+  const keptSet = new Set(keptTicketIds);
+  const discardedTicketIds = selection.pendingTicketIds.filter(
+    (ticketId) => !keptSet.has(ticketId),
+  );
+
+  player.destinationTicketIds = [...player.destinationTicketIds, ...keptTicketIds];
+  next.destinationTicketDiscardIds = [
+    ...next.destinationTicketDiscardIds,
+    ...discardedTicketIds,
+  ];
+  next.destinationTicketSelection = null;
+  next.notifications.push(
+    `${selection.playerId} kept ${keptTicketIds.length} destination ticket(s) and discarded ${discardedTicketIds.length}.`,
+  );
+
+  return next;
 }
 
 function reshuffleDiscardIntoDeck(state: LocalGameState): void {

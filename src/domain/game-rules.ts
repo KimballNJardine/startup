@@ -4,6 +4,7 @@ import {
   type BoardRouteState,
   type RouteCardRequirement,
 } from './board-data';
+import { createBoardStateInspector } from './board-state';
 import { getCardTypeCount } from './game-init';
 import type { ClaimCardSpend, ClaimLegalityResult, LocalGameState, PlayerId } from './game-types';
 import type { TrainCardType, TrainColor } from './train-types';
@@ -52,8 +53,32 @@ function cloneState(state: LocalGameState): LocalGameState {
     trainDeckCardIds: [...state.trainDeckCardIds],
     trainDiscardCardIds: [...state.trainDiscardCardIds],
     faceUpCardIds: [...state.faceUpCardIds],
+    isDestinationScoreApplied: state.isDestinationScoreApplied,
     notifications: [...state.notifications],
   };
+}
+
+export function getDestinationTicketNetDelta(state: LocalGameState, playerId: PlayerId): number {
+  return createBoardStateInspector(state).getDestinationTicketScoreBreakdownForPlayer(playerId).netDelta;
+}
+
+export function applyDestinationTicketScores(state: LocalGameState): LocalGameState {
+  if (state.isDestinationScoreApplied) {
+    throw new Error('Destination scores have already been applied.');
+  }
+
+  const next = cloneState(state);
+  const boardInspector = createBoardStateInspector(next);
+
+  next.playerOrder.forEach((playerId) => {
+    const destinationDelta = boardInspector.getDestinationTicketScoreBreakdownForPlayer(playerId).netDelta;
+    next.playersById[playerId].score += destinationDelta;
+  });
+
+  next.isDestinationScoreApplied = true;
+  next.notifications.push('Destination ticket scoring has been applied.');
+
+  return next;
 }
 
 export function canDrawDestinationTicket(state: LocalGameState): ClaimLegalityResult {

@@ -140,6 +140,7 @@ export function createInitialLocalGameState(options: CreateLocalGameOptions = {}
     trainDeckCardIds: deckCardIds,
     trainDiscardCardIds: [],
     faceUpCardIds: faceUpDraw.taken,
+    isDestinationScoreApplied: false,
     notifications: ['Local game initialized. Player 1 begins.'],
   };
 }

@@ -55,5 +55,6 @@ export interface LocalGameState {
   trainDeckCardIds: string[];
   trainDiscardCardIds: string[];
   faceUpCardIds: string[];
+  isDestinationScoreApplied: boolean;
   notifications: string[];
 }

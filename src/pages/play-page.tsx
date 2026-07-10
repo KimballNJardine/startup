@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  applyDestinationTicketScores,
   TRAIN_COLORS,
   canClaimRoute,
   canFinalizeDestinationTicketSelection,
@@ -9,15 +10,18 @@ import {
   canDrawFromDeck,
   claimRoute,
   createInitialLocalGameState,
+  createBoardStateInspector,
   DESTINATION_TICKETS,
   drawDestinationTicket,
   drawTrainCardFromDeck,
   drawTrainCardFromFaceUp,
   finalizeDestinationTicketSelection,
+  getCityLocationPins,
   getCardTypeCount,
   getDefaultClaimSpend,
   type ClaimCardSpend,
   type DestinationTicket,
+  type DestinationTicketProgressStatus,
   type LocalGameState,
   type TrainCardType,
   type TrainColor,
@@ -181,9 +185,24 @@ function TrainCardFan({
 
 function DestinationTicketCard({
   ticket,
+  status,
 }: {
   ticket: DestinationTicket;
+  status?: DestinationTicketProgressStatus;
 }): React.JSX.Element {
+  const isFulfilled = status === "fulfilled";
+  const isUnresolved = status === "unresolved";
+  const connectorClass = isFulfilled
+    ? "border-emerald-500/80"
+    : isUnresolved
+      ? "border-amber-500/75"
+      : "border-red-400/70";
+  const pointsClass = isFulfilled
+    ? "bg-emerald-700 text-white"
+    : isUnresolved
+      ? "bg-amber-700 text-amber-50"
+      : "bg-red-700 text-white";
+
   return (
     <article className="group relative overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-red-100/90 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-red-200/35 blur-xl transition group-hover:bg-red-300/45" />
@@ -191,12 +210,16 @@ function DestinationTicketCard({
         <p className="text-base font-extrabold text-rail-900">
           {ticket.originCity}
         </p>
-        <span className="h-px flex-1 border-t-2 border-dashed border-red-400/70" />
+        <span
+          className={`h-px flex-1 border-t-2 border-dashed ${connectorClass}`}
+        />
         <div className="flex items-center gap-2">
           <p className="text-base font-extrabold text-rail-900">
             {ticket.destinationCity}
           </p>
-          <span className="inline-flex rounded-full bg-red-700 px-2.5 py-1 text-xs font-extrabold text-white">
+          <span
+            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-extrabold ${pointsClass}`}
+          >
             {ticket.points}
           </span>
         </div>
@@ -252,6 +275,11 @@ export default function PlayPage() {
     DiscardAnimationCard[]
   >([]);
   const [uiError, setUiError] = useState<string | null>(null);
+  const [hoveredDestinationTicketId, setHoveredDestinationTicketId] = useState<
+    string | null
+  >(null);
+  const [selectedDestinationTicketIds, setSelectedDestinationTicketIds] =
+    useState<string[]>([]);
   const [
     selectedPendingDestinationTicketIds,
     setSelectedPendingDestinationTicketIds,
@@ -280,6 +308,69 @@ export default function PlayPage() {
   const currentPlayerDestinationTickets = currentPlayer.destinationTicketIds
     .map((ticketId) => gameState.destinationTicketsById[ticketId])
     .filter((ticket): ticket is DestinationTicket => Boolean(ticket));
+  const boardInspector = useMemo(
+    () => createBoardStateInspector(gameState),
+    [gameState],
+  );
+  const cityLocationPins = useMemo(() => getCityLocationPins(), []);
+  const currentPlayerDestinationProgressById = useMemo(() => {
+    return boardInspector
+      .getDestinationTicketProgressForPlayer(currentPlayer.id)
+      .reduce<
+        Record<
+          string,
+          {
+            status: DestinationTicketProgressStatus;
+            isFulfilled: boolean;
+          }
+        >
+      >((acc, progress) => {
+        acc[progress.ticketId] = {
+          status: progress.status,
+          isFulfilled: progress.isFulfilled,
+        };
+        return acc;
+      }, {});
+  }, [boardInspector, currentPlayer.id]);
+  const currentPlayerDestinationScoreBreakdown = useMemo(
+    () =>
+      boardInspector.getDestinationTicketScoreBreakdownForPlayer(
+        currentPlayer.id,
+      ),
+    [boardInspector, currentPlayer.id],
+  );
+  const currentPlayerNetScoreExcludingLongestRoute =
+    gameState.isDestinationScoreApplied
+      ? currentPlayer.score
+      : currentPlayer.score + currentPlayerDestinationScoreBreakdown.netDelta;
+  const highlightedDestinationTicketIds = useMemo(() => {
+    const ids = new Set<string>(selectedDestinationTicketIds);
+
+    selectedPendingDestinationTicketIds.forEach((ticketId) => {
+      ids.add(ticketId);
+    });
+
+    if (hoveredDestinationTicketId) {
+      ids.add(hoveredDestinationTicketId);
+    }
+
+    return Array.from(ids);
+  }, [
+    hoveredDestinationTicketId,
+    selectedDestinationTicketIds,
+    selectedPendingDestinationTicketIds,
+  ]);
+  const highlightedCityIds = useMemo(
+    () =>
+      boardInspector.getHighlightedCityIdsForTicketIds(
+        highlightedDestinationTicketIds,
+      ),
+    [boardInspector, highlightedDestinationTicketIds],
+  );
+  const highlightedCityIdSet = useMemo(
+    () => new Set(highlightedCityIds),
+    [highlightedCityIds],
+  );
   const lastDiscardedCardId =
     gameState.trainDiscardCardIds.length > 0
       ? gameState.trainDiscardCardIds[gameState.trainDiscardCardIds.length - 1]
@@ -557,6 +648,13 @@ export default function PlayPage() {
     setSelectedPendingDestinationTicketIds([]);
   }, [pendingDestinationTicketSelection]);
 
+  useEffect(() => {
+    const currentTicketIdSet = new Set(currentPlayer.destinationTicketIds);
+    setSelectedDestinationTicketIds((previous) =>
+      previous.filter((ticketId) => currentTicketIdSet.has(ticketId)),
+    );
+  }, [currentPlayer.destinationTicketIds]);
+
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <section
@@ -724,6 +822,25 @@ export default function PlayPage() {
             aria-hidden="true"
             style={overlayStyle}
           >
+            {cityLocationPins.map((cityPin) => {
+              const isHighlighted = highlightedCityIdSet.has(cityPin.id);
+
+              return (
+                <div
+                  key={cityPin.id}
+                  className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-300 ${
+                    isHighlighted
+                      ? "h-4 w-4 bg-yellow-300 ring-4 ring-yellow-400/80"
+                      : "h-2.5 w-2.5 bg-slate-950/80 ring-1 ring-white/70"
+                  }`}
+                  style={{
+                    left: `${cityPin.xPercent}%`,
+                    top: `${cityPin.yPercent}%`,
+                  }}
+                />
+              );
+            })}
+
             {gameState.board.pinIds.map((pinId) => {
               const pin = gameState.board.pinsById[pinId];
               const route = gameState.board.routesById[pin.routeLinkId];
@@ -813,17 +930,54 @@ export default function PlayPage() {
                 ) : (
                   <div className="pt-4">
                     {currentPlayerDestinationTickets.map((ticket, index) => (
-                      <div
+                      <button
                         key={ticket.id}
-                        className="relative"
+                        type="button"
+                        onClick={() =>
+                          setSelectedDestinationTicketIds((previous) =>
+                            previous.includes(ticket.id)
+                              ? previous.filter(
+                                  (ticketId) => ticketId !== ticket.id,
+                                )
+                              : [...previous, ticket.id],
+                          )
+                        }
+                        onMouseEnter={() =>
+                          setHoveredDestinationTicketId(ticket.id)
+                        }
+                        onMouseLeave={() =>
+                          setHoveredDestinationTicketId((previous) =>
+                            previous === ticket.id ? null : previous,
+                          )
+                        }
+                        onFocus={() => setHoveredDestinationTicketId(ticket.id)}
+                        onBlur={() =>
+                          setHoveredDestinationTicketId((previous) =>
+                            previous === ticket.id ? null : previous,
+                          )
+                        }
+                        aria-pressed={selectedDestinationTicketIds.includes(
+                          ticket.id,
+                        )}
+                        className={`relative w-full text-left transition ${
+                          selectedDestinationTicketIds.includes(ticket.id)
+                            ? "rounded-2xl ring-4 ring-yellow-300"
+                            : ""
+                        }`}
                         style={{
                           marginTop:
                             index === 0 ? 0 : "clamp(-2.4rem, -5vw, -1.75rem)",
                           zIndex: 20 + index,
                         }}
                       >
-                        <DestinationTicketCard ticket={ticket} />
-                      </div>
+                        <DestinationTicketCard
+                          ticket={ticket}
+                          status={
+                            currentPlayerDestinationProgressById[ticket.id]
+                              ?.status
+                          }
+                        />
+                      </button>
                     ))}
                   </div>
                 )}
@@ -1012,10 +1166,38 @@ export default function PlayPage() {
             Discard:{" "}
             <strong>{gameState.destinationTicketDiscardIds.length}</strong>
           </p>
+          <p className="text-sm text-rail-700">
+            Destination preview:{" "}
+            <strong>
+              {currentPlayerDestinationScoreBreakdown.netDelta >= 0
+                ? `+${currentPlayerDestinationScoreBreakdown.netDelta}`
+                : currentPlayerDestinationScoreBreakdown.netDelta}
+            </strong>
+          </p>
         </div>
         <p className="mt-3 text-sm text-rail-700">
-          Drawn destination tickets are shown beside the train card fan.
+          Hover or select destination tickets to light up mapped destination
+          cities.
         </p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() =>
+              applyTransition((previous) =>
+                applyDestinationTicketScores(previous),
+              )
+            }
+            disabled={gameState.isDestinationScoreApplied}
+            className="rounded-xl bg-rail-700 px-4 py-2 text-sm font-extrabold text-rail-paper disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            Apply Destination Scores (End Game)
+          </button>
+          <p className="text-xs text-rail-700">
+            {gameState.isDestinationScoreApplied
+              ? "Destination scores already applied."
+              : "Use once when the game ends."}
+          </p>
+        </div>
 
         {pendingDestinationTickets.length > 0 ? (
           <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/70 p-4">
@@ -1037,6 +1219,20 @@ export default function PlayPage() {
                   <button
                     key={ticket.id}
                     type="button"
+                    onMouseEnter={() =>
+                      setHoveredDestinationTicketId(ticket.id)
+                    }
+                    onMouseLeave={() =>
+                      setHoveredDestinationTicketId((previous) =>
+                        previous === ticket.id ? null : previous,
+                      )
+                    }
+                    onFocus={() => setHoveredDestinationTicketId(ticket.id)}
+                    onBlur={() =>
+                      setHoveredDestinationTicketId((previous) =>
+                        previous === ticket.id ? null : previous,
+                      )
+                    }
                     onClick={() =>
                       setSelectedPendingDestinationTicketIds((previous) =>
                         previous.includes(ticket.id)
@@ -1053,7 +1249,15 @@ export default function PlayPage() {
                         : "ring-1 ring-transparent"
                     }`}
                   >
-                    <DestinationTicketCard ticket={ticket} />
+                    <DestinationTicketCard
+                      ticket={ticket}
+                      status={
+                        boardInspector.getDestinationTicketProgress(
+                          gameState.turn.currentPlayerId,
+                          ticket.id,
+                        )?.status
+                      }
+                    />
                   </button>
                 );
               })}
@@ -1094,22 +1298,16 @@ export default function PlayPage() {
             <thead>
               <tr className="bg-rail-200/70 text-rail-900">
                 <th scope="col" className="px-3 py-2 font-extrabold">
-                  Turn
-                </th>
-                <th scope="col" className="px-3 py-2 font-extrabold">
-                  Player
-                </th>
-                <th scope="col" className="px-3 py-2 font-extrabold">
                   Trains Left
                 </th>
                 <th scope="col" className="px-3 py-2 font-extrabold">
                   Hand Size
                 </th>
                 <th scope="col" className="px-3 py-2 font-extrabold">
-                  Claimed Routes
+                  Segment Score
                 </th>
                 <th scope="col" className="px-3 py-2 font-extrabold">
-                  Segment Score
+                  Destination Tickets
                 </th>
               </tr>
             </thead>
@@ -1119,18 +1317,12 @@ export default function PlayPage() {
 
                 return (
                   <tr key={player.id} className="odd:bg-rail-paper/45">
-                    <td className="px-3 py-2">
-                      {gameState.turn.currentPlayerId === player.id
-                        ? "Current"
-                        : "Waiting"}
-                    </td>
-                    <td className="px-3 py-2">{player.displayName}</td>
                     <td className="px-3 py-2">{player.trainsLeft}</td>
                     <td className="px-3 py-2">{player.handCardIds.length}</td>
-                    <td className="px-3 py-2">
-                      {player.claimedRouteIds.length}
-                    </td>
                     <td className="px-3 py-2">{player.score}</td>
+                    <td className="px-3 py-2">
+                      {player.destinationTicketIds.length}
+                    </td>
                   </tr>
                 );
               })}
@@ -1161,6 +1353,51 @@ export default function PlayPage() {
         <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">
           Current Player Private Details
         </h2>
+
+        <div className="mt-4 overflow-x-auto rounded-xl border border-rail-200">
+          <table className="min-w-full border-collapse text-left text-sm">
+            <thead>
+              <tr className="bg-rail-200/70 text-rail-900">
+                <th scope="col" className="px-3 py-2 font-extrabold">
+                  Trains Left
+                </th>
+                <th scope="col" className="px-3 py-2 font-extrabold">
+                  Hand Size
+                </th>
+                <th scope="col" className="px-3 py-2 font-extrabold">
+                  Segment Score
+                </th>
+                <th scope="col" className="px-3 py-2 font-extrabold">
+                  Tickets Completed Score
+                </th>
+                <th scope="col" className="px-3 py-2 font-extrabold">
+                  Tickets Not Completed Score
+                </th>
+                <th scope="col" className="px-3 py-2 font-extrabold">
+                  Net Score (No Longest Route)
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white/80 text-rail-900">
+              <tr className="odd:bg-rail-paper/45">
+                <td className="px-3 py-2">{currentPlayer.trainsLeft}</td>
+                <td className="px-3 py-2">
+                  {currentPlayer.handCardIds.length}
+                </td>
+                <td className="px-3 py-2">{currentPlayer.score}</td>
+                <td className="px-3 py-2">
+                  +{currentPlayerDestinationScoreBreakdown.fulfilledPoints}
+                </td>
+                <td className="px-3 py-2">
+                  -{currentPlayerDestinationScoreBreakdown.unfulfilledPoints}
+                </td>
+                <td className="px-3 py-2">
+                  {currentPlayerNetScoreExcludingLongestRoute}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <div className="mt-4">
           <h3 className="text-base font-bold">Claimed Routes</h3>

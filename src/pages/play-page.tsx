@@ -34,7 +34,9 @@ export default function PlayPage(): React.JSX.Element {
         setHoveredRouteId={state.setHoveredRouteId}
         selectedRouteId={state.selectedRouteId}
         defaultClaimLegalityByRoute={state.defaultClaimLegalityByRoute}
-        selectedTrainTypeHighlightByRoute={state.selectedTrainTypeHighlightByRoute}
+        selectedTrainTypeHighlightByRoute={
+          state.selectedTrainTypeHighlightByRoute
+        }
         onSelectRoute={state.selectRoute}
         currentPlayerDestinationTickets={state.currentPlayerDestinationTickets}
         selectedDestinationTicketIds={state.selectedDestinationTicketIds}
@@ -85,7 +87,9 @@ export default function PlayPage(): React.JSX.Element {
         trainsLeft={state.currentPlayer.trainsLeft}
         handSize={state.currentPlayer.handCardIds.length}
         segmentScore={state.currentPlayer.score}
-        fulfilledPoints={state.currentPlayerDestinationScoreBreakdown.fulfilledPoints}
+        fulfilledPoints={
+          state.currentPlayerDestinationScoreBreakdown.fulfilledPoints
+        }
         unfulfilledPoints={
           state.currentPlayerDestinationScoreBreakdown.unfulfilledPoints
         }

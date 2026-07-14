@@ -7,48 +7,36 @@ import type {
   TrainColor,
 } from "../../../domain";
 import {
-  CLAIMED_PIN_CLASS_BY_PLAYER,
+  canCurrentPlayerClaimRouteWithDefaultSpend,
+  createBoardStateInspector,
+  getCardTypeCount,
+  getCityLocationPins,
+} from "../../../domain";
+import {
   boardStyle,
   feltSectionStyle,
   feltBoardWellStyle,
   overlayStyle,
-  RAINBOW_RING_GRADIENT,
 } from "../constants";
 import DestinationTicketCard from "./DestinationTicketCard";
+import MapPinButton from "./MapPinButton";
 import TrainCardFan from "./TrainCardFan";
 
 interface GameBoardProps {
   gameState: LocalGameState;
-  cityLocationPins: Array<{ id: string; xPercent: number; yPercent: number }>;
-  highlightedCityIdSet: Set<string>;
   hoveredRouteId: string | null;
   setHoveredRouteId: React.Dispatch<React.SetStateAction<string | null>>;
   selectedRouteId: string | null;
-  defaultClaimLegalityByRoute: Record<
-    string,
-    { isLegal: boolean; reason: string | null }
-  >;
-  selectedTrainTypeHighlightByRoute: Record<
-    string,
-    { matches: boolean; minLocomotivesNeeded: number }
-  >;
   onSelectRoute: (routeId: string) => void;
-  currentPlayerDestinationTickets: DestinationTicket[];
   selectedDestinationTicketIds: string[];
+  selectedPendingDestinationTicketIds: string[];
+  hoveredDestinationTicketId: string | null;
   setSelectedDestinationTicketIds: React.Dispatch<
     React.SetStateAction<string[]>
   >;
   setHoveredDestinationTicketId: React.Dispatch<
     React.SetStateAction<string | null>
   >;
-  currentPlayerDestinationProgressById: Record<
-    string,
-    {
-      status: DestinationTicketProgressStatus;
-      isFulfilled: boolean;
-    }
-  >;
-  currentHandCounts: Record<TrainColor | "locomotive", number>;
   selectedTrainType: TrainCardType | null;
   setSelectedTrainType: React.Dispatch<
     React.SetStateAction<TrainCardType | null>
@@ -57,23 +45,149 @@ interface GameBoardProps {
 
 export default function GameBoard({
   gameState,
-  cityLocationPins,
-  highlightedCityIdSet,
   hoveredRouteId,
   setHoveredRouteId,
   selectedRouteId,
-  defaultClaimLegalityByRoute,
-  selectedTrainTypeHighlightByRoute,
   onSelectRoute,
-  currentPlayerDestinationTickets,
   selectedDestinationTicketIds,
+  selectedPendingDestinationTicketIds,
+  hoveredDestinationTicketId,
   setSelectedDestinationTicketIds,
   setHoveredDestinationTicketId,
-  currentPlayerDestinationProgressById,
-  currentHandCounts,
   selectedTrainType,
   setSelectedTrainType,
 }: GameBoardProps): React.JSX.Element {
+  const boardInspector = React.useMemo(
+    () => createBoardStateInspector(gameState),
+    [gameState],
+  );
+  const cityLocationPins = React.useMemo(() => getCityLocationPins(), []);
+  const currentPlayer = gameState.playersById[gameState.turn.currentPlayerId];
+  const currentPlayerDestinationTickets = currentPlayer.destinationTicketIds
+    .map((ticketId) => gameState.destinationTicketsById[ticketId])
+    .filter((ticket): ticket is DestinationTicket => Boolean(ticket));
+  const currentPlayerDestinationProgressById = React.useMemo(() => {
+    return boardInspector
+      .getDestinationTicketProgressForPlayer(currentPlayer.id)
+      .reduce<
+        Record<
+          string,
+          { status: DestinationTicketProgressStatus; isFulfilled: boolean }
+        >
+      >((acc: Record<string, { status: DestinationTicketProgressStatus; isFulfilled: boolean }>, progress) => {
+        acc[progress.ticketId] = {
+          status: progress.status,
+          isFulfilled: progress.isFulfilled,
+        };
+        return acc;
+      }, {});
+  }, [boardInspector, currentPlayer.id]);
+  const currentHandCounts = React.useMemo(
+    () => getCardTypeCount(currentPlayer.handCardIds, gameState.trainCardsById),
+    [currentPlayer.handCardIds, gameState.trainCardsById],
+  );
+  const highlightedDestinationTicketIds = React.useMemo(() => {
+    const ids = new Set<string>(selectedDestinationTicketIds);
+
+    selectedPendingDestinationTicketIds.forEach((ticketId) => {
+      ids.add(ticketId);
+    });
+
+    if (hoveredDestinationTicketId) {
+      ids.add(hoveredDestinationTicketId);
+    }
+
+    return Array.from(ids);
+  }, [
+    hoveredDestinationTicketId,
+    selectedDestinationTicketIds,
+    selectedPendingDestinationTicketIds,
+  ]);
+  const highlightedCityIdSet = React.useMemo(
+    () =>
+      new Set(
+        boardInspector.getHighlightedCityIdsForTicketIds(
+          highlightedDestinationTicketIds,
+        ),
+      ),
+    [boardInspector, highlightedDestinationTicketIds],
+  );
+  const defaultClaimLegalityByRoute = React.useMemo(() => {
+    return gameState.board.routeIds.reduce<
+      Record<string, { isLegal: boolean; reason: string | null }>
+    >((acc, routeId) => {
+      acc[routeId] = canCurrentPlayerClaimRouteWithDefaultSpend(
+        gameState,
+        routeId,
+      );
+      return acc;
+    }, {});
+  }, [gameState]);
+  const selectedTrainTypeHighlightByRoute = React.useMemo(() => {
+    const highlightByRouteId: Record<
+      string,
+      { matches: boolean; minLocomotivesNeeded: number }
+    > = {};
+
+    if (!selectedTrainType) {
+      return highlightByRouteId;
+    }
+
+    const selectedTypeCount = currentHandCounts[selectedTrainType] ?? 0;
+    const locomotiveCount = currentHandCounts.locomotive ?? 0;
+
+    gameState.board.routeIds.forEach((routeId) => {
+      const route = gameState.board.routesById[routeId];
+
+      if (route.claim.claimedByPlayerId !== null) {
+        highlightByRouteId[routeId] = {
+          matches: false,
+          minLocomotivesNeeded: 0,
+        };
+        return;
+      }
+
+      if (selectedTrainType === "locomotive") {
+        highlightByRouteId[routeId] = {
+          matches: locomotiveCount >= route.slotCount,
+          minLocomotivesNeeded: 0,
+        };
+        return;
+      }
+
+      const routeAllowsSelectedColor =
+        route.trainRequirementMode === "any-color" ||
+        route.fixedColor === selectedTrainType;
+
+      if (!routeAllowsSelectedColor || selectedTypeCount <= 0) {
+        highlightByRouteId[routeId] = {
+          matches: false,
+          minLocomotivesNeeded: 0,
+        };
+        return;
+      }
+
+      const selectedCardsUsable = Math.min(selectedTypeCount, route.slotCount);
+      const minLocomotivesNeeded = Math.max(
+        0,
+        route.slotCount - selectedCardsUsable,
+      );
+      const hasEnoughLocomotives = minLocomotivesNeeded <= locomotiveCount;
+
+      highlightByRouteId[routeId] = {
+        matches: hasEnoughLocomotives,
+        minLocomotivesNeeded: hasEnoughLocomotives ? minLocomotivesNeeded : 0,
+      };
+    });
+
+    return highlightByRouteId;
+  }, [
+    currentHandCounts,
+    gameState.board.routeIds,
+    gameState.board.routesById,
+    selectedTrainType,
+  ]);
+
   return (
     <section
       className="overflow-visible rounded-2xl border border-emerald-950/90 p-5 sm:p-6"
@@ -94,30 +208,30 @@ export default function GameBoard({
           aria-hidden="true"
           style={overlayStyle}
         >
-          {cityLocationPins.map((cityPin) => {
-            const isHighlighted = highlightedCityIdSet.has(cityPin.id);
+          {cityLocationPins.map(
+            (cityPin: { id: string; xPercent: number; yPercent: number }) => {
+              const isHighlighted = highlightedCityIdSet.has(cityPin.id);
 
-            return (
-              <div
-                key={cityPin.id}
-                className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-300 ${
-                  isHighlighted
-                    ? "h-4 w-4 bg-yellow-300 ring-4 ring-yellow-400/80"
-                    : "h-2.5 w-2.5 bg-slate-950/80 ring-1 ring-white/70"
-                }`}
-                style={{
-                  left: `${cityPin.xPercent}%`,
-                  top: `${cityPin.yPercent}%`,
-                }}
-              />
-            );
-          })}
+              return (
+                <div
+                  key={cityPin.id}
+                  className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition-all duration-300 ${
+                    isHighlighted
+                      ? "h-4 w-4 bg-yellow-300 ring-4 ring-yellow-400/80"
+                      : "h-2.5 w-2.5 bg-slate-950/80 ring-1 ring-white/70"
+                  }`}
+                  style={{
+                    left: `${cityPin.xPercent}%`,
+                    top: `${cityPin.yPercent}%`,
+                  }}
+                />
+              );
+            },
+          )}
 
           {gameState.board.pinIds.map((pinId) => {
             const pin = gameState.board.pinsById[pinId];
             const route = gameState.board.routesById[pin.routeLinkId];
-            const isClaimed = route.claim.claimedByPlayerId !== null;
-            const claimedBy = route.claim.claimedByPlayerId;
             const isHoveredRoute = hoveredRouteId === route.id;
             const isSelectedRoute = selectedRouteId === route.id;
             const defaultLegality = defaultClaimLegalityByRoute[route.id];
@@ -127,67 +241,20 @@ export default function GameBoard({
               selectedTrainTypeHighlight?.matches ?? false;
             const minLocomotivesNeeded =
               selectedTrainTypeHighlight?.minLocomotivesNeeded ?? 0;
-            const isRainbowPin =
-              isSelectedTrainTypeMatch &&
-              minLocomotivesNeeded > 0 &&
-              pin.slotIndex >= route.slotCount - minLocomotivesNeeded;
-
-            let visualClass = "opacity-0 bg-transparent";
-            const pinStyle: React.CSSProperties = {
-              left: `${pin.xPercent}%`,
-              top: `${pin.yPercent}%`,
-              width: "var(--pin-width)",
-              height: "var(--pin-height)",
-              transform: `translate(-50%, -50%) rotate(${pin.angleDeg}deg)`,
-            };
-
-            if (
-              isClaimed &&
-              (claimedBy === "player-1" || claimedBy === "player-2")
-            ) {
-              visualClass = `${CLAIMED_PIN_CLASS_BY_PLAYER[claimedBy]}`;
-            } else if (isHoveredRoute) {
-              visualClass = "opacity-100 bg-transparent ring-0";
-              pinStyle.border = "2px solid transparent";
-              pinStyle.backgroundImage = `linear-gradient(transparent, transparent), ${RAINBOW_RING_GRADIENT}`;
-              pinStyle.backgroundOrigin = "border-box";
-              pinStyle.backgroundClip = "padding-box, border-box";
-            } else if (isRainbowPin) {
-              visualClass = "opacity-100 bg-transparent ring-0";
-              pinStyle.border = "2px solid transparent";
-              pinStyle.backgroundImage = `linear-gradient(transparent, transparent), ${RAINBOW_RING_GRADIENT}`;
-              pinStyle.backgroundOrigin = "border-box";
-              pinStyle.backgroundClip = "padding-box, border-box";
-            } else if (isSelectedTrainTypeMatch) {
-              visualClass =
-                "opacity-100 bg-yellow-300/45 ring-4 ring-yellow-300/95";
-            } else if (isSelectedRoute) {
-              visualClass = defaultLegality.isLegal
-                ? "opacity-100 bg-yellow-300/35 ring-4 ring-yellow-300/95"
-                : "opacity-100 bg-slate-300/35 ring-4 ring-slate-400/95";
-            }
 
             return (
-              <button
+              <MapPinButton
                 key={pin.id}
-                type="button"
-                aria-label={`Route ${route.id}, segment ${pin.slotIndex + 1}`}
-                onClick={() => onSelectRoute(route.id)}
-                onMouseEnter={() => setHoveredRouteId(route.id)}
-                onMouseLeave={() =>
-                  setHoveredRouteId((existing) =>
-                    existing === route.id ? null : existing,
-                  )
-                }
-                onFocus={() => setHoveredRouteId(route.id)}
-                onBlur={() =>
-                  setHoveredRouteId((existing) =>
-                    existing === route.id ? null : existing,
-                  )
-                }
-                className={`absolute rounded-sm shadow-sm transition ${visualClass}`}
-                style={pinStyle}
-              ></button>
+                pin={pin}
+                route={route}
+                isHoveredRoute={isHoveredRoute}
+                isSelectedRoute={isSelectedRoute}
+                defaultClaimIsLegal={defaultLegality.isLegal}
+                selectedTrainTypeMatch={isSelectedTrainTypeMatch}
+                minLocomotivesNeeded={minLocomotivesNeeded}
+                onSelectRoute={onSelectRoute}
+                setHoveredRouteId={setHoveredRouteId}
+              />
             );
           })}
         </div>

@@ -28,24 +28,17 @@ export default function PlayPage(): React.JSX.Element {
 
       <GameBoard
         gameState={state.gameState}
-        cityLocationPins={state.cityLocationPins}
-        highlightedCityIdSet={state.highlightedCityIdSet}
         hoveredRouteId={state.hoveredRouteId}
         setHoveredRouteId={state.setHoveredRouteId}
         selectedRouteId={state.selectedRouteId}
-        defaultClaimLegalityByRoute={state.defaultClaimLegalityByRoute}
-        selectedTrainTypeHighlightByRoute={
-          state.selectedTrainTypeHighlightByRoute
-        }
         onSelectRoute={state.selectRoute}
-        currentPlayerDestinationTickets={state.currentPlayerDestinationTickets}
         selectedDestinationTicketIds={state.selectedDestinationTicketIds}
+        selectedPendingDestinationTicketIds={
+          state.selectedPendingDestinationTicketIds
+        }
+        hoveredDestinationTicketId={state.hoveredDestinationTicketId}
         setSelectedDestinationTicketIds={state.setSelectedDestinationTicketIds}
         setHoveredDestinationTicketId={state.setHoveredDestinationTicketId}
-        currentPlayerDestinationProgressById={
-          state.currentPlayerDestinationProgressById
-        }
-        currentHandCounts={state.currentHandCounts}
         selectedTrainType={state.selectedTrainType}
         setSelectedTrainType={state.setSelectedTrainType}
       />

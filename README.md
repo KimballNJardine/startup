@@ -159,9 +159,9 @@ This model aligns with the current board overlay approach in play.html: x/y perc
 
 For this deliverable I did the following. I checked the box `[x]` and added a description for things I completed.
 
-- [ ] I completed the prerequisites for this deliverable (Simon deployed, GitHub link, Git commits)
-- [ ] **All functionality implemented or mocked out** - I did not complete this part of the deliverable.
-- [ ] **Hooks** - I did not complete this part of the deliverable.
+- [x] I completed the prerequisites for this deliverable (Simon deployed, GitHub link, Git commits)
+- [x] **All functionality implemented or mocked out** - The play page is driven by a hook-backed local game state model, so the main gameplay loop, card draws, route claims, ticket selection, and turn/status updates are implemented or intentionally mocked in React.
+- [x] **Hooks** - I moved the play page logic into `usePlayPageState` and use React hooks such as state, memoization, refs, and effects to manage the game UI reactively.
 
 ## 🚀 Service deliverable
 

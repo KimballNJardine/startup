@@ -1,11 +1,19 @@
 import React from "react";
 import "./app.css";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
 import LeaderboardPage from "./pages/leaderboard-page";
 import LoginPage from "./pages/login-page";
 import PlayPage from "./pages/play-page";
 import SetupPage from "./pages/setup-page";
 import NotFoundPage from "./pages/notfound-page";
+
+function navLinkClassName({ isActive }: { isActive: boolean }) {
+  if (isActive) {
+    return "block whitespace-nowrap rounded-full bg-rail-700 px-3 py-1.5 text-sm font-semibold text-rail-paper";
+  }
+
+  return "block whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold text-rail-700 transition hover:bg-rail-200 hover:text-rail-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-700";
+}
 
 export default function App() {
   return (
@@ -18,37 +26,24 @@ export default function App() {
           <nav aria-label="Primary navigation">
             <menu className="m-0 flex list-none gap-2 overflow-x-auto p-0">
               <li>
-                <a
-                  href="index.html"
-                  aria-current="page"
-                  className="block whitespace-nowrap rounded-full bg-rail-700 px-3 py-1.5 text-sm font-semibold text-rail-paper"
-                >
+                <NavLink to="/login" className={navLinkClassName}>
                   Login
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="setup.html"
-                  className="block whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold text-rail-700 transition hover:bg-rail-200 hover:text-rail-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-700"
-                >
+                <NavLink to="/setup" className={navLinkClassName}>
                   Setup
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="play.html"
-                  className="block whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold text-rail-700 transition hover:bg-rail-200 hover:text-rail-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-700"
-                >
+                <NavLink to="/play" className={navLinkClassName}>
                   Play
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="leaderboard.html"
-                  className="block whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold text-rail-700 transition hover:bg-rail-200 hover:text-rail-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rail-700"
-                >
+                <NavLink to="/leaderboard" className={navLinkClassName}>
                   Leaderboard
-                </a>
+                </NavLink>
               </li>
             </menu>
           </nav>

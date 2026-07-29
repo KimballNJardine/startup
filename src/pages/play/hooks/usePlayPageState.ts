@@ -1,21 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import {
-  applyDestinationTicketScores,
   TRAIN_COLORS,
   canClaimRoute,
   canFinalizeDestinationTicketSelection,
   canCurrentPlayerClaimRouteWithDefaultSpend,
   canDrawDestinationTicket,
   canDrawFromDeck,
-  claimRoute,
   createBoardStateInspector,
   createInitialLocalGameState,
   DESTINATION_TICKETS,
-  drawDestinationTicket,
-  drawTrainCardFromDeck,
-  drawTrainCardFromFaceUp,
-  finalizeDestinationTicketSelection,
   getCityLocationPins,
   getCardTypeCount,
   getDefaultClaimSpend,
@@ -26,6 +20,15 @@ import {
   type TrainCardType,
   type TrainColor,
 } from "../../../domain";
+import {
+  applyDestinationTicketScores as applyDestinationTicketScoresRequest,
+  claimRoute as claimRouteRequest,
+  confirmDestinationTicketSelection as confirmDestinationTicketSelectionRequest,
+  drawDestinationTickets as drawDestinationTicketsRequest,
+  drawTrainCardFromDeck as drawTrainCardFromDeckRequest,
+  drawTrainCardFromFaceUp as drawTrainCardFromFaceUpRequest,
+  getGameState,
+} from "../../../services/game-api";
 import {
   DISCARD_ANIMATION_CLEAR_BUFFER_MS,
   DISCARD_ANIMATION_DURATION_MS,
@@ -128,6 +131,32 @@ export default function usePlayPageState(): UsePlayPageStateResult {
     setSelectedPendingDestinationTicketIds,
   ] = useState<string[]>([]);
   const discardAnimationTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    let isActive = true;
+
+    void (async () => {
+      try {
+        const nextGameState = await getGameState();
+        if (isActive) {
+          setGameState(nextGameState);
+          setUiError(null);
+        }
+      } catch (error) {
+        if (isActive) {
+          setUiError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load the current game state.",
+          );
+        }
+      }
+    })();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const currentPlayer = gameState.playersById[gameState.turn.currentPlayerId];
   const pendingDestinationTicketSelection = gameState.destinationTicketSelection;
@@ -344,20 +373,25 @@ export default function usePlayPageState(): UsePlayPageStateResult {
     });
   }, [gameState, selectedRouteId]);
 
-  const applyTransition = (
-    transition: (state: LocalGameState) => LocalGameState,
+  const runMutation = (
+    mutation: () => Promise<LocalGameState>,
+    onSuccess?: (nextState: LocalGameState) => void,
   ): void => {
     setUiError(null);
 
-    try {
-      setGameState((previous) => transition(previous));
-    } catch (error) {
-      setUiError(
-        error instanceof Error
-          ? error.message
-          : "Unknown game transition failure.",
-      );
-    }
+    void (async () => {
+      try {
+        const nextState = await mutation();
+        setGameState(nextState);
+        onSuccess?.(nextState);
+      } catch (error) {
+        setUiError(
+          error instanceof Error
+            ? error.message
+            : "Unknown game transition failure.",
+        );
+      }
+    })();
   };
 
   const selectRoute = (routeId: string): void => {
@@ -460,19 +494,14 @@ export default function usePlayPageState(): UsePlayPageStateResult {
       locomotiveCards: claimSpend.locomotiveCards,
     };
 
-    queueDiscardAnimationFromSpend(claimSpendSnapshot);
-
-    applyTransition((previous) => {
-      const next = claimRoute(
-        previous,
-        selectedRoute.id,
-        claimSpendSnapshot,
-        previous.turn.currentPlayerId,
-      );
-      setSelectedRouteId(null);
-      setClaimSpend(null);
-      return next;
-    });
+    runMutation(
+      () => claimRouteRequest(selectedRoute.id, claimSpendSnapshot),
+      () => {
+        queueDiscardAnimationFromSpend(claimSpendSnapshot);
+        setSelectedRouteId(null);
+        setClaimSpend(null);
+      },
+    );
   };
 
   useEffect(() => {
@@ -500,23 +529,23 @@ export default function usePlayPageState(): UsePlayPageStateResult {
   }, [currentPlayer.destinationTicketIds]);
 
   const onDrawDestinationTickets = (): void =>
-    applyTransition((previous) => drawDestinationTicket(previous));
+    runMutation(() => drawDestinationTicketsRequest());
 
   const onDrawFromDeck = (): void =>
-    applyTransition((previous) => drawTrainCardFromDeck(previous));
+    runMutation(() => drawTrainCardFromDeckRequest());
 
   const onDrawFromFaceUp = (index: number): void =>
-    applyTransition((previous) => drawTrainCardFromFaceUp(previous, index));
+    runMutation(() => drawTrainCardFromFaceUpRequest(index));
 
   const onApplyDestinationScores = (): void =>
-    applyTransition((previous) => applyDestinationTicketScores(previous));
+    runMutation(() => applyDestinationTicketScoresRequest());
 
   const onConfirmKeptTickets = (): void =>
-    applyTransition((previous) =>
-      finalizeDestinationTicketSelection(
-        previous,
-        selectedPendingDestinationTicketIds,
-      ),
+    runMutation(
+      () =>
+        confirmDestinationTicketSelectionRequest(
+          selectedPendingDestinationTicketIds,
+        ),
     );
 
   const getPendingTicketStatus = (
